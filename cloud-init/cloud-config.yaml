@@ -17,10 +17,12 @@ swap:
   size: 'auto'
   maxsize: 2147483648 # 2 GB
 
+## Boot Commands ##
 bootcmd:
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
   - apt-mark hold cloud-init
 
+## Post-boot Commands ##
 runcmd:
   # Create temp work dir
   - mkdir -p /run/cloud-init/tmp
@@ -33,10 +35,12 @@ runcmd:
   - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > /run/cloud-init/tmp/ec2_tags
   - . /run/cloud-init/tmp/ec2_tags
 
-  - curl -s "$S3_BUCKET_URL/installer/zookeeper.sh" | bash
+  # Configure Applications
+  - curl -sf "$S3_BUCKET_URL/installer/zookeeper.sh" | bash
 
   # Final clean-up
   - apt-mark unhold cloud-init
   - rm -rf /run/cloud-init/tmp
 
+## Final Message ##
 final_message: 'OK: System initialisation is completed after $UPTIME seconds'
