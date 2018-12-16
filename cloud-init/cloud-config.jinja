@@ -1,12 +1,21 @@
 #cloud-config
+
+## Package Updates ##
 package_update: true
 package_upgrade: true
 
+## Package Installation ##
 packages:
   - jq
   - awscli
   - zookeeper
   - zookeeperd
+
+## Swap Space ##
+swap:
+  filename: /mnt/swap
+  size: 'auto'
+  maxsize: 2147483648 # 2 GB
 
 bootcmd:
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
@@ -21,16 +30,13 @@ runcmd:
   - . /run/cloud-init/tmp/instance_data
 
   # Export configured instance tags as environment variable
-  - aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > /run/cloud-init/tmp/ec2_tags
+  - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > /run/cloud-init/tmp/ec2_tags
   - . /run/cloud-init/tmp/ec2_tags
+
+  - curl "$S3_BUCKET_URL/installer/zookeeper.sh" | bash
 
   # Final clean-up
   - apt-mark unhold cloud-init
   - rm -rf /run/cloud-init/tmp
-
-swap:
-  filename: /mnt/swap
-  size: 'auto'
-  maxsize: 2147483648 # 2 GB
 
 final_message: 'OK: System initialisation is completed after $UPTIME seconds'
