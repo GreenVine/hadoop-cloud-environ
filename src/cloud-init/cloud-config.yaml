@@ -5,11 +5,14 @@ package_update: true
 package_upgrade: true
 
 ## Package Installation ##
+apt_sources:
+  - source: "ppa:webupd8team/java"
+
 packages:
   - jq
   - awscli
-  - zookeeper
-  - openjdk-11-jdk-headless
+  - zookeeperd
+  - oracle-java8-installer
 
 ## Swap Space ##
 swap:
