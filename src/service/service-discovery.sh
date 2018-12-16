@@ -13,7 +13,7 @@ upsert() {
         \"ResourceRecordSet\": {
           \"Name\": \"$NODE_HOSTNAME.$DNS_SUFFIX\",
           \"Type\": \"A\",
-          \"TTL\": 60,
+          \"TTL\": 1,
           \"ResourceRecords\": [{ \"Value\": \"$INSTANCE_PRIV_IPV4\" }]
         }
       }
@@ -35,7 +35,7 @@ delete() {
         \"ResourceRecordSet\": {
           \"Name\": \"$NODE_HOSTNAME.$DNS_SUFFIX\",
           \"Type\": \"A\",
-          \"TTL\": 60,
+          \"TTL\": 1,
           \"ResourceRecords\": [{ \"Value\": \"$INSTANCE_PRIV_IPV4\" }]
         }
       }
