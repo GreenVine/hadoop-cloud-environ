@@ -5,6 +5,7 @@ SLAVE_REPLICAS=$(jq -r '.config.deployment.replica.slaveReplicas' $DEPLOY_SPEC)
 
 ZOOKEEPER_CONF_DIR=/etc/zookeeper/conf
 ZOOKEEPER_DATA_DIR=/var/lib/zookeeper
+ZOOKEEPER_CTRL_DIR=/usr/share/zookeeper/bin
 ZOOKEEPER_MYID=$(echo $INSTANCE_CONFIG | jq -r '.serverId')
 
 # Cluster nodes list
@@ -15,4 +16,6 @@ if [ "$ZOOKEEPER_MYID" -ge 1 ]; then
   echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
 fi
 
-systemctl restart zookeeper
+$ZOOKEEPER_CTRL_DIR/zkServer.sh start
+$ZOOKEEPER_CTRL_DIR/zkServer.sh status
+jps

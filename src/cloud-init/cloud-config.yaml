@@ -9,7 +9,7 @@ packages:
   - jq
   - awscli
   - zookeeper
-  - zookeeperd
+  - openjdk-11-jdk-headless
 
 ## Swap Space ##
 swap:
@@ -22,6 +22,8 @@ bootcmd:
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
   - apt-mark hold cloud-init
 
+## Post-boot Commands ##
+runcmd:
   # Environment variables
   - export TEMP_WORKDIR=/run/cloud-init/tmp
   - export DEPLOY_SPEC=$TEMP_WORKDIR/deployment.json
@@ -38,6 +40,7 @@ bootcmd:
   - . $TEMP_WORKDIR/ec2_tags
 
   # Deployment spec
+  - echo 'Loading Deployment Spec from '$DEPLOY_SPEC_URL
   - curl -sf "$DEPLOY_SPEC_URL" > $DEPLOY_SPEC
 
   # Extra environment variables
@@ -48,14 +51,12 @@ bootcmd:
   # Configure service discovery
   - curl -sf "$ASSET_URL/service/service-discovery.sh" | bash -s -- up
 
-## Post-boot Commands ##
-runcmd:
   # Configure applications
-  # - curl -sf "$ASSET_URL/installer/zookeeper.sh" | bash
+  - curl -sf "$ASSET_URL/installer/zookeeper.sh" | bash
 
   # Final clean-up
   - apt-mark unhold cloud-init
-  - rm -rf $TEMP_WORKDIR
+  # - rm -rf $TEMP_WORKDIR
 
 ## Final Message ##
 final_message: 'OK: System initialisation is completed after $UPTIME seconds'
