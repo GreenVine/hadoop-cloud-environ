@@ -16,4 +16,8 @@ if [ "$ZOOKEEPER_MYID" -ge 1 ]; then
   echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
 fi
 
-systemctl restart zookeeper
+systemctl stop zookeeper
+
+sleep $(( $(echo $INSTANCE_CONFIG | jq -r '.serverId') * 10 ))  # Sleep according to their server ID to ensure prior nodes are ready
+
+systemctl start zookeeper
