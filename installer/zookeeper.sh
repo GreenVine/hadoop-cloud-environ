@@ -1,21 +1,18 @@
 #!/bin/bash
 
+MASTER_REPLICAS=$(jq -r '.config.deployment.replica.masterReplicas' $DEPLOY_SPEC)
+SLAVE_REPLICAS=$(jq -r '.config.deployment.replica.slaveReplicas' $DEPLOY_SPEC)
+
 ZOOKEEPER_CONF_DIR=/etc/zookeeper/conf
+ZOOKEEPER_DATA_DIR=/var/lib/zookeeper
+ZOOKEEPER_MYID=$(echo $INSTANCE_CONFIG | jq -r '.serverId')
 
-if [ "$MASTER_REPLICA" -ge 1 ]; then
-  for i in $(seq $MASTER_REPLICA); do
-    echo "server.$i=master$i.$ENVIRON_DNS_SUFFIX:2888:3888" >> $ZOOKEEPER_CONF_DIR/zoo.cfg
-  done
-else
-  echo 'Invalid number of master replica'
-  exit 1
+# Cluster nodes list
+jq -rc '.config.cluster | .common * (.nodes[]) | "server." + .serverId + "=" + .serverName + ".'"$DNS_SUFFIX"'" + ":" + (.firstPort|tostring) + ":" + (.secondPort|tostring)' $DEPLOY_SPEC >> $ZOOKEEPER_CONF_DIR/zoo.cfg
+
+if [ "$ZOOKEEPER_MYID" -ge 1 ]; then
+  echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_CONF_DIR/myid
+  echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
 fi
 
-if [ "$SLAVE_REPLICA" -ge 1 ]; then
-  for i in $(seq $(( $MASTER_REPLICA + 1)) $(( $SLAVE_REPLICA + $MASTER_REPLICA))); do
-    echo "server.$i=slave$(($i - $SLAVE_REPLICA)).$ENVIRON_DNS_SUFFIX:2888:3888" >> $ZOOKEEPER_CONF_DIR/zoo.cfg
-  done
-else
-  echo 'Invalid number of slave replica'
-  exit 2
-fi
+systemctl restart zookeeper
