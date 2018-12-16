@@ -33,7 +33,7 @@ runcmd:
   - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > /run/cloud-init/tmp/ec2_tags
   - . /run/cloud-init/tmp/ec2_tags
 
-  - curl "$S3_BUCKET_URL/installer/zookeeper.sh" | bash
+  - curl -s "$S3_BUCKET_URL/installer/zookeeper.sh" | bash
 
   # Final clean-up
   - apt-mark unhold cloud-init
