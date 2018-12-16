@@ -13,6 +13,8 @@ packages:
   - awscli
   - zookeeperd
   - oracle-java8-installer
+  - oracle-java8-set-default
+  - unattended-upgrades
 
 ## Swap Space ##
 swap:
@@ -24,6 +26,9 @@ swap:
 bootcmd:
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
   - apt-mark hold cloud-init
+
+  # Accept Oracle license
+  - cloud-init-per once accepted-oracle-license-v1-1 echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
 
 ## Post-boot Commands ##
 runcmd:

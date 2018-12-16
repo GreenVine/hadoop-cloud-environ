@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ROUTE53_BATCH_FILE=$TEMP_WORKDIR/route53_batch
-INSTANCE_PRIV_IPV4=$(jq -r '.ds."meta-data"."local-ipv4"' /run/cloud-init/instance-data.json)
+INSTANCE_PRIV_IPV4=$(jq -r '.ds."meta_data"."local_ipv4"' /run/cloud-init/instance-data.json)
 ROUTE53_HOSTED_ZONE=$(jq -r '.config.discovery.dns.route53ZoneId' $DEPLOY_SPEC)
 
 upsert() {
