@@ -3,7 +3,7 @@ python: 3.6
 
 env:
   global:
-    - S3_BUCKET_PREFIX="${S3_BUCKET}/${TRAVIS_BRANCH}"
+    - S3_BUCKET_PREFIX="${S3_BUCKET}/${TRAVIS_BRANCH}/assets"
 
 install: pip install awscli
 
@@ -13,7 +13,7 @@ script:
 
 deploy:
   - provider: script
-    script: aws s3 sync --delete installer/ s3://${S3_BUCKET_PREFIX}/installer
+    script: aws s3 sync --delete src/ s3://${S3_BUCKET_PREFIX}
     on:
       all_branches: true
       condition: $TRAVIS_BRANCH =~ ^master|develop|staging$

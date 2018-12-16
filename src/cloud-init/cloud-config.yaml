@@ -1,0 +1,61 @@
+#cloud-config
+
+## Package Updates ##
+package_update: true
+package_upgrade: true
+
+## Package Installation ##
+packages:
+  - jq
+  - awscli
+  - zookeeper
+  - zookeeperd
+
+## Swap Space ##
+swap:
+  filename: /mnt/swap
+  size: 'auto'
+  maxsize: 2147483648 # 2 GB
+
+## Boot Commands ##
+bootcmd:
+  # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
+  - apt-mark hold cloud-init
+
+  # Environment variables
+  - export TEMP_WORKDIR=/run/cloud-init/tmp
+  - export DEPLOY_SPEC=$TEMP_WORKDIR/deployment.json
+
+  # Create temp work dir
+  - mkdir -p $TEMP_WORKDIR
+
+  # Export instance data as environment variables
+  - jq -r '.v1 | with_entries( if .key | contains("-") then .key |= sub("-";"_") else . end) | to_entries | .[] | .key |= ascii_upcase | "export " + .key + "=" + .value' /run/cloud-init/instance-data.json > $TEMP_WORKDIR/instance_data
+  - . $TEMP_WORKDIR/instance_data
+
+  # Export configured instance tags as environment variable
+  - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > $TEMP_WORKDIR/ec2_tags
+  - . $TEMP_WORKDIR/ec2_tags
+
+  # Deployment spec
+  - curl -sf "$DEPLOY_SPEC_URL" > $DEPLOY_SPEC
+
+  # Extra environment variables
+  - export DNS_SUFFIX=$(jq -r '.config.discovery.dns.dnsSuffix' $DEPLOY_SPEC)
+  - export ASSET_URL=$(jq -r '.config.deployment.locator.assetBaseUrl' $DEPLOY_SPEC)
+  - export INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.serverName=="'"$NODE_HOSTNAME"'"))' $DEPLOY_SPEC)
+
+  # Configure service discovery
+  - curl -sf "$ASSET_URL/service/service-discovery.sh" | bash -s -- up
+
+## Post-boot Commands ##
+runcmd:
+  # Configure applications
+  # - curl -sf "$ASSET_URL/installer/zookeeper.sh" | bash
+
+  # Final clean-up
+  - apt-mark unhold cloud-init
+  - rm -rf $TEMP_WORKDIR
+
+## Final Message ##
+final_message: 'OK: System initialisation is completed after $UPTIME seconds'
