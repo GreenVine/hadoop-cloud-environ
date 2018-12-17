@@ -35,8 +35,9 @@ download_archive() {
     return 2
   fi
 
+  echo 'Signature verified. Extracting the archive to /opt...'
   mkdir -p /opt
-  tar zxvf "$HADOOP_ARCHIVE" -C /opt
+  tar zxf "$HADOOP_ARCHIVE" -C /opt
 
   if [ ! -d "$HADOOP_INSTALL_DIR-$HADOOP_VERSION" ]; then
     echo 'Failed to extract the Hadoop archive.'
@@ -103,10 +104,12 @@ configure_user() {
   curl -sf "$HADOOP_PRIV_KEY" > "$HADOOP_USER_HOME/.ssh/id_rsa"
 
   chmod 0600 "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
+  chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
 
   if [ "$HADOOP_ADD_AUTH_KEY" == "true" ]; then
     cat "$HADOOP_USER_HOME/.ssh/id_rsa.pub" >> "$HADOOP_USER_HOME/.ssh/authorized_keys"
     chmod 0600 "$HADOOP_USER_HOME/.ssh/authorized_keys"
+    chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
   fi
 
   set +e
