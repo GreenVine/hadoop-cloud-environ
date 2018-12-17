@@ -1,0 +1,39 @@
+{
+	"version": "20181212",
+	"config": {
+		"deployment": {
+			"locator": {}
+		},
+		"version": {},
+		"cluster": {
+			"common": {},
+			"nodes": []
+		},
+		"discovery": {
+			"dns": {}
+		},
+		"configuration": {
+			"hadoop": {
+				"common": {},
+				"file": {
+					"core_site": {
+            "variable": {},
+						"static": []
+					},
+					"hdfs_site": {
+						"variable": {},
+						"static": []
+          },
+          "mapred_site": {
+            "variable": {},
+						"static": []
+          },
+          "yarn_site": {
+            "variable": {},
+						"static": []
+          }
+				}
+			}
+		}
+	}
+}
