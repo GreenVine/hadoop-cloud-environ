@@ -46,6 +46,21 @@
       </property>
     {% endfor %}
 
+    <property>
+      <name>dfs.journalnode.edits.dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/journal</value>
+    </property>
+
+    <property>
+      <name>dfs.namenode.name.dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/name</value>
+    </property>
+
+    <property>
+      <name>dfs.datanode.data.dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/data</value>
+    </property>
+
     <!-- Location to store NameNode metadata on JournalNode -->
     <property>
       <name>dfs.namenode.shared.edits.dir</name>

@@ -18,6 +18,12 @@
   {% if variable and nodes %}
     {% set master_replicas = nodes | selectattr('server_role', 'equalto', 'master') | list %}
 
+    <!-- Location to store aggregated logs -->
+    <property>
+      <name>yarn.nodemanager.remote-app-log-dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/logs</value>
+    </property>
+
     <!-- ResourceManager Configuration Start -->
     <property>
       <name>yarn.resourcemanager.zk-address</name>

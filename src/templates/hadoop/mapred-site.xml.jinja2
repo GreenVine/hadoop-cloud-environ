@@ -35,6 +35,16 @@
 
     {% endif %}
 
+    <property>
+      <name>mapreduce.jobhistory.intermediate-done-dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/history_tmp</value>
+    </property>
+
+    <property>
+      <name>mapreduce.jobhistory.done-dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/history</value>
+    </property>
+
   {% endif %}
 
   {% if static %}

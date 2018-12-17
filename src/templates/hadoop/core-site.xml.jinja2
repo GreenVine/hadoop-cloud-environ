@@ -30,6 +30,12 @@
       <value>{% for node in nodes %}{{ comma() }}{{ node.server_name }}.{{ discovery.dns.dns_suffix }}:{{ variable.zookeeper_quorum_port }}{% endfor %}</value>
     </property>
 
+    <!-- Hadoop temporary directory -->
+    <property>
+      <name>hadoop.tmp.dir</name>
+      <value>{{ variable.hadoop_hdfs_dir }}/tmp</value>
+    </property>
+
   {% endif %}
 
   {% if static %}
