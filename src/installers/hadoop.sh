@@ -12,7 +12,7 @@ HADOOP_CONF_WORKDIR="$TEMP_SUB_WORKDIR/conf"
 HADOOP_INSTALL_DIR=/opt/hadoop
 
 preinstall() {
-  mkdir -p "$TEMP_SUB_WORKDIR"
+  mkdir -p "$TEMP_SUB_WORKDIR" "$HADOOP_CONF_WORKDIR"
 
   echo "Import Hadoop PubKey from $HADOOP_SIGN_KEY_URL..."
   curl -sf "$HADOOP_SIGN_KEY_URL" | gpg --import
