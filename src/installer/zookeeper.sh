@@ -5,7 +5,7 @@ SLAVE_REPLICAS=$(jq -r '.config.deployment.replica.slaveReplicas' $DEPLOY_SPEC)
 
 ZOOKEEPER_CONF_DIR=/etc/zookeeper/conf
 ZOOKEEPER_DATA_DIR=/var/lib/zookeeper
-# ZOOKEEPER_CTRL_DIR=/usr/share/zookeeper/bin
+ZOOKEEPER_CTRL_DIR=/usr/share/zookeeper/bin
 ZOOKEEPER_MYID=$(echo $INSTANCE_CONFIG | jq -r '.serverId')
 
 # Cluster nodes list
@@ -16,4 +16,8 @@ if [ "$ZOOKEEPER_MYID" -ge 1 ]; then
   echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
 fi
 
+# Start Zookeeper automatically on boot
+systemctl enable zookeeper
+
+# TODO: Start Zookeeper simultaneously may cause cluster to fail
 systemctl stop zookeeper
