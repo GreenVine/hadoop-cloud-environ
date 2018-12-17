@@ -18,6 +18,15 @@ packages:
   - libxml2-utils
   - unattended-upgrades
 
+## Service Users ##
+groups:
+  - hadoop
+
+users:
+  - name: hadoop
+    gecos: Hadoop Service Account
+    primary-group: hadoop
+
 ## Swap Space ##
 swap:
   filename: /mnt/swap
@@ -36,22 +45,22 @@ bootcmd:
 runcmd:
   # Environment variables
   - export TEMP_WORKDIR=/run/cloud-init/tmp
-  - export DEPLOY_SPEC=$TEMP_WORKDIR/deployment.json
+  - export DEPLOY_SPEC="$TEMP_WORKDIR/deployment.json"
 
   # Create temp work dir
-  - mkdir -p $TEMP_WORKDIR
+  - mkdir -p "$TEMP_WORKDIR"
 
   # Export instance data as environment variables
-  - jq -r '.v1 | with_entries( if .key | contains("-") then .key |= sub("-";"_") else . end) | to_entries | .[] | .key |= ascii_upcase | "export " + .key + "=" + .value' /run/cloud-init/instance-data.json > $TEMP_WORKDIR/instance_data
+  - jq -r '.v1 | with_entries( if .key | contains("-") then .key |= sub("-";"_") else . end) | to_entries | .[] | .key |= ascii_upcase | "export " + .key + "=" + .value' /run/cloud-init/instance-data.json > "$TEMP_WORKDIR/instance_data"
   - . $TEMP_WORKDIR/instance_data
 
   # Export configured instance tags as environment variable
-  - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > $TEMP_WORKDIR/ec2_tags
+  - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > "$TEMP_WORKDIR/ec2_tags"
   - . $TEMP_WORKDIR/ec2_tags
 
   # Deployment spec
-  - curl -s "$DEPLOY_SPEC_URL" > $DEPLOY_SPEC
-  - export ASSET_URL=$(jq -r '.config.deployment.locator.asset_base_url' $DEPLOY_SPEC)
+  - curl -s "$DEPLOY_SPEC_URL" > "$DEPLOY_SPEC"
+  - export ASSET_URL=$(jq -r '.config.deployment.locator.asset_base_url' "$DEPLOY_SPEC")
 
   # Bootstrap
   - curl -sf "$ASSET_URL/installers/bootstrapper.sh" | bash
