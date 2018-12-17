@@ -19,7 +19,7 @@ curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
 # Configure applications
 set -e
 curl -sf "$ASSET_URL/installers/zookeeper.sh" | bash
-curl -sf "$ASSET_URL/installers/hadoop.sh" | bash
+curl -sf "$ASSET_URL/installers/hadoop.sh" | bash -s -- install
 curl -sf "$ASSET_URL/installers/hbase.sh" | bash
 set +e
 
