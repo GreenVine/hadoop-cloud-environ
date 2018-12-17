@@ -23,6 +23,7 @@ groups:
   - hadoop
 
 users:
+  - default
   - name: hadoop
     gecos: Hadoop Service Account
     primary-group: hadoop
@@ -44,7 +45,7 @@ bootcmd:
 ## Post-boot Commands ##
 runcmd:
   # Environment variables
-  - export TEMP_WORKDIR=/run/cloud-init/tmp
+  - export TEMP_WORKDIR=/opt/cloud-init/tmp
   - export DEPLOY_SPEC="$TEMP_WORKDIR/deployment.json"
 
   # Create temp work dir
