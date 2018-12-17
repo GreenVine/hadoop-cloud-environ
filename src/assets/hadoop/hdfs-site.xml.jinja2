@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+  {% set comma = joiner(',') %}
+
+  {% if variable and nodes %}
+    {% set cluster = variable.cluster_name or 'cluster-ha' %}
+    {% set master_replicas = nodes | selectattr('server_role', 'equalto', 'master') | list %}
+
+    <!-- Nameservice of hdfs -->
+    <property>
+      <name>dfs.nameservices</name>
+      <value>{{ cluster }}</value>
+    </property>
+
+    <!-- NameNodes within the cluster -->
+    <property>
+      <name>dfs.ha.namenodes.{{ cluster }}</name>
+      <value>{% for i in range(master_replicas | length) %}{{ comma() }}nn{{ i + 1 }}{% endfor %}</value>
+    </property>
+
+    {% for i in range(master_replicas | length) %}
+      <property>
+        <name>dfs.namenode.rpc-address.{{ cluster }}.nn{{ i + 1 }}</name>
+        <value>{{ master_replicas[i].server_name }}.{{ discovery.dns.dns_suffix }}:{{ variable.hadoop_namenode_rpc_port }}</value>
+      </property>
+      <property>
+        <name>dfs.namenode.http-address.{{ cluster }}.nn{{ i + 1}}</name>
+        <value>{{ master_replicas[i].server_name }}.{{ discovery.dns.dns_suffix }}:{{ variable.hadoop_namenode_http_port }}</value>
+      </property>
+    {% endfor %}
+
+    <!-- Location to store NameNode metadata on JournalNode -->
+    <property>
+      <name>dfs.namenode.shared.edits.dir</name>
+      <value>qjournal://{% for node in nodes %}{{ node.server_name }}.{{ discovery.dns.dns_suffix }}:{{ variable.hadoop_journalnode_rpc_port }}{{ ';' if not loop.last }}{% endfor %}/{{ cluster }}</value>
+    </property>
+
+    <!-- Failover mode on failure -->
+    <property>
+      <name>dfs.client.failover.proxy.provider.{{ cluster }}</name>
+      <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+
+    <property>
+      <name>ha.zookeeper.quorum</name>
+      <value>{% for node in nodes %}{{ node.server_name }}.{{ discovery.dns.dns_suffix }}:{{ variable.zookeeper_quorum_port }}{{ ',' if not loop.last }}{% endfor %}</value>
+    </property>
+
+  {% endif %}
+
+  {% if static %}
+    {% for entry in static %}
+      <property>
+      {% for k, v in entry.items() %}
+        {% if not k.startswith('__') %}
+          <{{ k }}>{{ v }}</{{ k }}>
+        {% endif %}
+      {% endfor %}
+      </property>
+    {% endfor %}
+  {% endif %}
+</configuration>
