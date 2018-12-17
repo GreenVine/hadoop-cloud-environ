@@ -117,10 +117,12 @@ configure_user() {
 
 case "$1" in
   install)
+    set -e
     preinstall
     download_archive
     configure_file
     configure_user
+    set +e
     ;;
   *)
     echo "Usage: $0 {install}" >&2
