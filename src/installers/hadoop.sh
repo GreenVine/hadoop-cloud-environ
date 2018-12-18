@@ -9,38 +9,37 @@ HADOOP_SIGN_KEY_URL="https://dist.apache.org/repos/dist/release/hadoop/common/KE
 
 HADOOP_ARCHIVE="$TEMP_SUB_WORKDIR/hadoop.tar.gz"
 HADOOP_CONF_WORKDIR="$TEMP_SUB_WORKDIR/conf"
-HADOOP_INSTALL_DIR=/opt/hadoop
 
 preinstall() {
   mkdir -p "$TEMP_SUB_WORKDIR" "$HADOOP_CONF_WORKDIR"
 
-  echo "Import Hadoop PubKey from $HADOOP_SIGN_KEY_URL..."
+  echo "[Hadoop] Import Hadoop PubKey from $HADOOP_SIGN_KEY_URL..."
   curl -sf "$HADOOP_SIGN_KEY_URL" | gpg --import
 }
 
 download_archive() {
-  echo "Download Hadoop $HADOOP_VERSION from $HADOOP_BIN_URL..."
+  echo "[Hadoop] Download Hadoop $HADOOP_VERSION from $HADOOP_BIN_URL..."
 
   rm -f "$HADOOP_ARCHIVE"
   curl -s "$HADOOP_BIN_URL" -o "$HADOOP_ARCHIVE"
   curl -s "$HADOOP_ASC_URL" -o "$HADOOP_ARCHIVE.asc"
 
   if [ ! -f "$HADOOP_ARCHIVE" ] || [ ! -f "$HADOOP_ARCHIVE.asc" ]; then
-    echo 'Failed to download Hadoop archive or signature file.'
+    echo >&2 '[Hadoop::WARN] Failed to download Hadoop archive or signature file.'
     return 1
   fi
 
   if ! gpg --verify "$HADOOP_ARCHIVE.asc" "$HADOOP_ARCHIVE"; then
-    echo 'Failed to verify the signature of Hadoop archive.'
+    echo >&2 '[Hadoop::WARN] Failed to verify the signature of Hadoop archive.'
     return 2
   fi
 
-  echo 'Signature verified. Extracting the archive to /opt...'
+  echo '[Hadoop] Signature verified. Extracting the archive to /opt...'
   mkdir -p /opt
   tar zxf "$HADOOP_ARCHIVE" -C /opt
 
   if [ ! -d "$HADOOP_INSTALL_DIR-$HADOOP_VERSION" ]; then
-    echo 'Failed to extract the Hadoop archive.'
+    echo >&2 '[Hadoop::WARN] Failed to extract the Hadoop archive.'
     return 3
   else
     mv "$HADOOP_INSTALL_DIR-$HADOOP_VERSION" "$HADOOP_INSTALL_DIR"
@@ -49,9 +48,18 @@ download_archive() {
   return 0
 }
 
-configure_file() {
-  local DEPLOY_SPEC_MIN="$HADOOP_CONF_WORKDIR/cluster-spec-min.json"
+configure_env() {
+  local HDFS_DIR=$(jq -r '.config.configuration.hadoop.common.hadoop_hdfs_dir' "$DEPLOY_SPEC")
 
+  if [ -z "$HDFS_DIR" ] || [ "$HDFS_DIR" == '/' ]; then
+    HDFS_DIR=/var/lib/hadoop/hdfs  # fallback directory
+    echo >&2 "[Hadoop::WARN] HDFS directory has been reset to default directory: $HDFS_DIR"
+  fi
+
+  mkdir -p $HDFS_DIR/{tmp,journal,name,data,history_tmp,history,logs}
+}
+
+configure_file() {
   local XML_CORE=core-site.xml
   local XML_HDFS=hdfs-site.xml
   local XML_MAPRED=mapred-site.xml
@@ -60,28 +68,23 @@ configure_file() {
   set -e
 
   # Download and install configurations
-
-  echo 'Download configuration templates...'
-
-  curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
-
+  echo '[Hadoop] Download configuration templates...'
   curl -sf "$ASSET_URL/templates/hadoop/$XML_CORE.jinja2" -o "$HADOOP_CONF_WORKDIR/$XML_CORE.jinja2"
   curl -sf "$ASSET_URL/templates/hadoop/$XML_HDFS.jinja2" -o "$HADOOP_CONF_WORKDIR/$XML_HDFS.jinja2"
   curl -sf "$ASSET_URL/templates/hadoop/$XML_MAPRED.jinja2" -o "$HADOOP_CONF_WORKDIR/$XML_MAPRED.jinja2"
   curl -sf "$ASSET_URL/templates/hadoop/$XML_YARN.jinja2" -o "$HADOOP_CONF_WORKDIR/$XML_YARN.jinja2"
 
-  echo 'Configuring files...'
-
+  echo '[Hadoop] Configuring files...'
   jq -rs '.[0] * .[1] | .config | { nodes: .cluster.nodes, variable: (.cluster.common * .configuration.hadoop.common * .configuration.hadoop.file.core_site.variable), static: .configuration.hadoop.file.core_site.static, discovery: .discovery}' "$DEPLOY_SPEC_MIN" "$DEPLOY_SPEC" | jinja2 "$HADOOP_CONF_WORKDIR/$XML_CORE.jinja2" | xmllint --format - > "$HADOOP_INSTALL_DIR/etc/hadoop/$XML_CORE"
   jq -rs '.[0] * .[1] | .config | { nodes: .cluster.nodes, variable: (.cluster.common * .configuration.hadoop.common * .configuration.hadoop.file.hdfs_site.variable), static: .configuration.hadoop.file.hdfs_site.static, discovery: .discovery}' "$DEPLOY_SPEC_MIN" "$DEPLOY_SPEC" | jinja2 "$HADOOP_CONF_WORKDIR/$XML_HDFS.jinja2" | xmllint --format - > "$HADOOP_INSTALL_DIR/etc/hadoop/$XML_HDFS"
   jq -rs '.[0] * .[1] | .config | { nodes: .cluster.nodes, variable: (.cluster.common * .configuration.hadoop.common * .configuration.hadoop.file.mapred_site.variable), static: .configuration.hadoop.file.mapred_site.static, discovery: .discovery}' "$DEPLOY_SPEC_MIN" "$DEPLOY_SPEC" | jinja2 "$HADOOP_CONF_WORKDIR/$XML_MAPRED.jinja2" | xmllint --format - > "$HADOOP_INSTALL_DIR/etc/hadoop/$XML_MAPRED"
-  jq -rs '.[0] * .[1] | .config | { nodes: .cluster.nodes, variable: (.cluster.common * .configuration.hadoop.common * .configuration.hadoop.file.yarn_site.variable), static: .configuration.hadoop.file.yarn_site.static, discovery: .discovery}' "$DEPLOY_SPEC_MIN" "$DEPLOY_SPEC" | jinja2 "$HADOOP_CONF_WORKDIR/$XML_YARN.jinja2" | xmllint --format - > "$HADOOP_INSTALL_DIR/etc/hadoop/$XML_YARN"
+  jq -rs '.[0] * .[1] | .config | { nodes: .cluster.nofdes, variable: (.cluster.common * .configuration.hadoop.common * .configuration.hadoop.file.yarn_site.variable), static: .configuration.hadoop.file.yarn_site.static, discovery: .discovery}' "$DEPLOY_SPEC_MIN" "$DEPLOY_SPEC" | jinja2 "$HADOOP_CONF_WORKDIR/$XML_YARN.jinja2" | xmllint --format - > "$HADOOP_INSTALL_DIR/etc/hadoop/$XML_YARN"
 
   # Configure hadoop-env.sh
-  sed -i -- 's#${JAVA_HOME}#asd#g' "$HADOOP_INSTALL_DIR/etc/hadoop/hadoop-env.sh"
+  sed -i -- 's#${JAVA_HOME}#'"$JAVA_HOME"'#g' "$HADOOP_INSTALL_DIR/etc/hadoop/hadoop-env.sh"
 
   # Configure slaves
-  jq -r '.config | (.cluster.nodes | map(.server_name)[]) | . + "'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HADOOP_INSTALL_DIR/etc/hadoop/slaves"
+  jq -r '.config | (.cluster.nodes | map(.server_name)[]) | . + ".'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HADOOP_INSTALL_DIR/etc/hadoop/slaves"
 
   set +e
 }
@@ -95,7 +98,7 @@ configure_user() {
 
   set -e
 
-  echo 'Configuring Hadoop user...'
+  echo '[Hadoop] Configuring Hadoop user...'
 
   mkdir -p "$HADOOP_USER_HOME/.ssh"
   chown hadoop:hadoop "$HADOOP_USER_HOME" "$HADOOP_USER_HOME/.ssh"
@@ -120,6 +123,7 @@ case "$1" in
     set -e
     preinstall
     download_archive
+    configure_env
     configure_file
     configure_user
     set +e

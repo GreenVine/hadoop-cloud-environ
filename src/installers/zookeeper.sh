@@ -16,10 +16,10 @@ configure_file() {
 }
 
 configure_service() {
-  # Start Zookeeper automatically on boot
+  # Start ZooKeeper automatically on boot
   systemctl enable zookeeper
 
-  # TODO: Start Zookeeper simultaneously may cause cluster to fail
+  # TODO: Start ZooKeeper simultaneously may cause cluster to fail
   systemctl stop zookeeper
 }
 
