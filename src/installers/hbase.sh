@@ -57,8 +57,6 @@ configure_env() {
 configure_file() {
   local XML_SITE=hbase-site.xml
 
-  set -e
-
   # Download and install configurations
   echo '[HBase] Download configuration templates...'
   curl -sf "$ASSET_URL/templates/hbase/$XML_SITE.jinja2" -o "$HBASE_CONF_WORKDIR/$XML_SITE.jinja2"
@@ -79,8 +77,10 @@ configure_file() {
 
   # Configure backup masters (could be empty)
   jq -r '.config.cluster.nodes[] | select(.server_role == "master" and (.server_id | tonumber) > 1) | .server_name + ".'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HBASE_INSTALL_DIR/conf/backup-masters"
+}
 
-  set +e
+configure_permission() {
+  chown -R hbase:hbase "$HBASE_INSTALL_DIR"
 }
 
 case "$1" in
@@ -90,6 +90,7 @@ case "$1" in
     download_archive
     configure_env
     configure_file
+    configure_permission
     set +e
     ;;
   *)

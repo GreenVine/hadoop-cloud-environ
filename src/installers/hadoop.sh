@@ -96,8 +96,6 @@ configure_user() {
   local HADOOP_PRIV_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hadoop.private' "$DEPLOY_SPEC")
   local HADOOP_ADD_AUTH_KEY=$(jq -r '.config.cluster.identity.ssh.hadoop.add_authorized_key' "$DEPLOY_SPEC")
 
-  set -e
-
   echo '[Hadoop] Configuring Hadoop user...'
 
   mkdir -p "$HADOOP_USER_HOME/.ssh"
@@ -114,8 +112,10 @@ configure_user() {
     chmod 0600 "$HADOOP_USER_HOME/.ssh/authorized_keys"
     chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/authorized_keys"
   fi
+}
 
-  set +e
+configure_permission() {
+  chown -R hadoop:hadoop "$HADOOP_INSTALL_DIR"
 }
 
 case "$1" in
@@ -126,6 +126,7 @@ case "$1" in
     configure_env
     configure_file
     configure_user
+    configure_permission
     set +e
     ;;
   *)
