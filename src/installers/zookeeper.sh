@@ -27,8 +27,8 @@ configure_service() {
   systemctl stop zookeeper
   sleep $(( INSTANCE_SERVER_ID * 10 ))  # compulsory sleep
 
-  jq -r '.config.cluster.nodes[] | select(.server_id | tonumber < '"$INSTANCE_SERVER_ID"') | .server_name' |
-    while IFS=$'\t' read -r hostname; do
+  jq -r '.config.cluster.nodes[] | select(.server_id | tonumber < '"$INSTANCE_SERVER_ID"') | .server_name' "$DEPLOY_SPEC" |
+    while IFS=$'\n' read -r hostname; do
       # clear DNS cache and sleep if remote host is not ready
       echo "[ZooKeeper] Waiting for cluster node: $hostname..."
 

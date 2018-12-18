@@ -130,8 +130,8 @@ configure_remote_ssh() {
 
     mkdir -p /home/hadoop/.ssh
 
-    jq -r '.config.cluster.nodes[] | .server_name' |
-      while IFS=$'\t' read -r hostname; do
+    jq -r '.config.cluster.nodes[] | .server_name' "$DEPLOY_SPEC" |
+      while IFS=$'\n' read -r hostname; do
         REMOTE_INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.server_name=="'"$hostname"'"))' "$DEPLOY_SPEC")
         REMOTE_INSTANCE_SSH_PORT=$(echo "$REMOTE_INSTANCE_CONFIG" | jq -r '.ssh_port')
 
