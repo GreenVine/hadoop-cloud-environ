@@ -49,14 +49,15 @@ download_archive() {
 }
 
 configure_env() {
-  local HDFS_DIR=$(jq -r '.config.configuration.hadoop.common.hadoop_hdfs_dir' "$DEPLOY_SPEC")
+  local HADOOP_DIR=$(jq -r '.config.configuration.hadoop.common.hadoop_dir' "$DEPLOY_SPEC")
 
-  if [ -z "$HDFS_DIR" ] || [ "$HDFS_DIR" == '/' ]; then
-    HDFS_DIR=/var/lib/hadoop/hdfs  # fallback directory
-    echo >&2 "[Hadoop::WARN] HDFS directory has been reset to default directory: $HDFS_DIR"
+  if [ -z "$HADOOP_DIR" ] || [ "$HADOOP_DIR" == '/' ]; then
+    HADOOP_DIR=/var/lib/hadoop  # fallback directory
+    echo >&2 "[Hadoop::WARN] Hadoop directory has been reset to default directory: $HADOOP_DIR"
   fi
 
-  mkdir -p $HDFS_DIR/{tmp,journal,name,data,history_tmp,history,logs}
+  mkdir -p "$HADOOP_DIR/hdfs/"{tmp,journal,name,data,history_tmp,history,logs}
+  chown -R hadoop:hadoop "$HADOOP_DIR"
 }
 
 configure_file() {
