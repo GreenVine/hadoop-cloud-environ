@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export JAVA_HOME=/usr/lib/jvm/java-8-oracle
-export ZOOKEEPER_INSTALL_DIR=/usr/share/zookeeper/bin
+export ZOOKEEPER_INSTALL_DIR=/usr/share/zookeeper
 export HADOOP_INSTALL_DIR=/opt/hadoop
 export HBASE_INSTALL_DIR=/opt/hbase
 
@@ -9,9 +9,20 @@ export DEPLOY_SPEC_MIN="$TEMP_WORKDIR/deployment-min.json"
 export DNS_SUFFIX=$(jq -r '.config.discovery.dns.dns_suffix' "$DEPLOY_SPEC")
 export INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.server_name=="'"$NODE_HOSTNAME"'"))' "$DEPLOY_SPEC")
 
-# Configure Java
-if ! grep -q "JAVA_HOME" /etc/environment; then
+# Source environment file
+. /etc/environment
+
+# Configure Java environment variable
+if ! grep -q "JAVA_HOME=" /etc/environment; then
   echo "JAVA_HOME=\"$JAVA_HOME\"" >> /etc/environment
+fi
+
+# Configure PATH
+PATH_NEW="$PATH:$HADOOP_INSTALL_DIR/bin:$ZOOKEEPER_HOME/bin:$HBASE_INSTALL_DIR/bin:$HADOOP_INSTALL_DIR/sbin"
+if ! grep -q "PATH=" /etc/environment; then
+  echo "PATH=\"$PATH_NEW\"" >> /etc/environment
+else
+  sed -i -- "s#PATH=.*#PATH=\"$PATH_NEW\"#g" /etc/environment
 fi
 
 # Configure system environment variables
