@@ -25,13 +25,12 @@ groups:
 
 users:
   - default
-  - name: hbase
-    gecos: HBase Service Account
-    primary-group: hbase
-    system: true
   - name: hadoop
     gecos: Hadoop Service Account
     primary-group: hadoop
+  - name: hbase
+    gecos: HBase Service Account
+    primary-group: hbase
 
 ## Swap Space ##
 swap:
