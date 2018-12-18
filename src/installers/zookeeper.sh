@@ -16,11 +16,34 @@ configure_file() {
 }
 
 configure_service() {
+  # Get current instance's server ID
+  local INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
+  local ZOOKEEPER_QUORUM_PORT=$(echo "$INSTANCE_CONFIG" | jq -r '.zookeeper_quorum_port')
+
   # Start ZooKeeper automatically on boot
   systemctl enable zookeeper
 
-  # TODO: Start ZooKeeper simultaneously may cause cluster to fail
+  echo '[ZooKeeper] Sleeping to wait for other cluster nodes...'
   systemctl stop zookeeper
+  sleep $(( INSTANCE_SERVER_ID * 10 ))  # compulsory sleep
+
+  jq -r '.config.cluster.nodes[] | select(.server_id | tonumber < '"$INSTANCE_SERVER_ID"') | .server_name' |
+    while IFS=$'\t' read -r hostname; do
+      # clear DNS cache and sleep if remote host is not ready
+      echo "[ZooKeeper] Waiting for cluster node: $hostname..."
+
+      timeout "100" sh -c 'until nc -z $0 $1; do systemctl restart systemd-resolved.service; sleep 10; echo "[ZooKeeper::WARN] Retrying..."; done' "$hostname.$DNS_SUFFIX" "$ZOOKEEPER_QUORUM_PORT"
+
+      if [ $? -eq 0 ]; then
+        echo "[ZooKeeper] Cluster node $hostname is up!"
+      else
+        echo "[ZooKeeper::ERROR] Cluster node $hostname may be down or the remote service is not running."
+      fi
+    done
+
+  systemctl start zookeeper  # start service anyway
+  sleep 5
+  echo stat | nc localhost 2181
 }
 
 case "$1" in
