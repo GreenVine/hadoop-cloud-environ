@@ -112,7 +112,7 @@ configure_user() {
   if [ "$HADOOP_ADD_AUTH_KEY" == "true" ]; then
     cat "$HADOOP_USER_HOME/.ssh/id_rsa.pub" >> "$HADOOP_USER_HOME/.ssh/authorized_keys"
     chmod 0600 "$HADOOP_USER_HOME/.ssh/authorized_keys"
-    chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
+    chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/authorized_keys"
   fi
 
   set +e
