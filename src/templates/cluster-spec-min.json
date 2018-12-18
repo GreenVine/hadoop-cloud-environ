@@ -33,6 +33,15 @@
             "static": []
           }
         }
+      },
+      "hbase": {
+        "common": {},
+        "file": {
+          "hbase_site": {
+            "variable": {},
+            "static": []
+          }
+        }
       }
     }
   }

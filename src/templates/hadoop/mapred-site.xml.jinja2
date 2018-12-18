@@ -14,8 +14,6 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
-<!-- Put site-specific property overrides in this file. -->
-
 <configuration>
   {% if variable and nodes %}
     {% set master_replicas = nodes | selectattr('server_role', 'equalto', 'master') | list %}
