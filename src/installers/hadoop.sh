@@ -119,6 +119,39 @@ configure_permission() {
   chown -R hadoop:hadoop "$HADOOP_INSTALL_DIR"
 }
 
+configure_remote_ssh() {
+  local REMOTE_INSTANCE_CONFIG
+  local REMOTE_INSTANCE_SSH_PORT
+  local INSTANCE_ROLE=$(echo "$INSTANCE_CONFIG" | jq -r '.server_role')
+
+  # Setup SSH access to all other nodes for master nodes
+  if [ "$INSTANCE_ROLE" == 'master' ]; then
+    echo '[Hadoop] SSH Setup: Configuring SSH trusted hosts...'
+
+    mkdir -p /home/hadoop/.ssh
+
+    jq -r '.config.cluster.nodes[] | .server_name' |
+      while IFS=$'\t' read -r hostname; do
+        REMOTE_INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.server_name=="'"$hostname"'"))' "$DEPLOY_SPEC")
+        REMOTE_INSTANCE_SSH_PORT=$(echo "$REMOTE_INSTANCE_CONFIG" | jq -r '.ssh_port')
+
+        # clear DNS cache and sleep if remote host is not ready
+        echo "[Hadoop] SSH Setup: Waiting for cluster node: $hostname..."
+
+        timeout "100" sh -c 'until nc -z $0 $1; do systemctl restart systemd-resolved.service; sleep 10; echo "[Hadoop::WARN] Retrying..."; done' "$hostname.$DNS_SUFFIX" "$REMOTE_INSTANCE_SSH_PORT"
+
+        if [ $? -eq 0 ]; then
+          echo "[Hadoop] SSH Setup: Setting up access for cluster node $hostname..."
+          ssh-keyscan -p "$REMOTE_INSTANCE_SSH_PORT" "$hostname.$DNS_SUFFIX" >> /home/hadoop/.ssh/known_hosts
+        else
+          echo "[Hadoop::ERROR] SSH Setup: Cluster node $hostname may be down or the remote SSH service is not running."
+        fi
+      done
+
+    chown -R hadoop:hadoop /home/hadoop/.ssh
+  fi
+}
+
 case "$1" in
   install)
     set -e
@@ -128,6 +161,7 @@ case "$1" in
     configure_file
     configure_user
     configure_permission
+    configure_remote_ssh
     set +e
     ;;
   *)
