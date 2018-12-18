@@ -51,7 +51,7 @@ download_archive() {
 configure_env() {
   mkdir -p "$HBASE_INSTALL_DIR/pids"
 
-  cp -rf "$HBASE_INSTALL_DIR/lib/{hbase-client-*.jar,hbase-common-*.jar,hbase-protocol-*.jar,hbase-server-*.jar,metrics-core-*.jar}" "$HADOOP_INSTALL_DIR/share/hadoop/common/"
+  cp -rf "$HBASE_INSTALL_DIR/lib/"{hbase-client-*.jar,hbase-common-*.jar,hbase-protocol-*.jar,hbase-server-*.jar,metrics-core-*.jar} "$HADOOP_INSTALL_DIR/share/hadoop/common/"
 }
 
 configure_file() {
@@ -72,7 +72,7 @@ configure_file() {
     echo "export HBASE_CLASSPATH=$HBASE_INSTALL_DIR/lib"
     echo "export HBASE_PID_DIR=$HBASE_INSTALL_DIR/pids"
     echo "export HBASE_MANAGES_ZK=false"
-  } >> $HBASE_INSTALL_DIR/conf/hbase-env.sh
+  } >> "$HBASE_INSTALL_DIR/conf/hbase-env.sh"
 
   # Configure regionservers
   jq -r '.config.cluster.nodes[] | select(.server_role == "slave") | .server_name + ".'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HBASE_INSTALL_DIR/conf/regionservers"
