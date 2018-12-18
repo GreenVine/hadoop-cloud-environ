@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export ZOOKEEPER_INSTALL_DIR=/usr/share/zookeeper/bin
 export HADOOP_INSTALL_DIR=/opt/hadoop
 export HBASE_INSTALL_DIR=/opt/hbase
 
@@ -11,8 +12,21 @@ export INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(
 # Configure Java
 if ! grep -q "JAVA_HOME" /etc/environment; then
   echo "JAVA_HOME=\"$JAVA_HOME\"" >> /etc/environment
-  . /etc/environment
 fi
+
+# Configure system environment variables
+{
+  echo "HADOOP_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "ZOOKEEPER_HOME=\"$ZOOKEEPER_INSTALL_DIR\""
+  echo "HBASE_HOME=\"$HBASE_INSTALL_DIR\""
+  echo "HADOOP_MAPRED_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "HADOOP_COMMON_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "HADOOP_HDFS_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "YARN_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "HADOOP_COMMON_LIB_NATIVE_DIR=\"$HADOOP_INSTALL_DIR/lib/native\""
+  echo "HADOOP_OPTS=\"-Djava.library.path=$HADOOP_INSTALL_DIR/lib/native\""
+} >> /etc/environment
+. /etc/environment
 
 # Install Jinja CLI
 pip3 install jinja2-cli
