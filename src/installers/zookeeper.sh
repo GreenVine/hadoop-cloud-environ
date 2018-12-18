@@ -16,8 +16,6 @@ configure_file() {
 }
 
 configure_service() {
-  # Get current instance's server ID
-  local INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
   local ZOOKEEPER_QUORUM_PORT=$(echo "$INSTANCE_CONFIG" | jq -r '.zookeeper_quorum_port')
 
   # Start ZooKeeper automatically on boot

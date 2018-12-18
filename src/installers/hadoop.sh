@@ -122,7 +122,6 @@ configure_permission() {
 configure_remote_ssh() {
   local REMOTE_INSTANCE_CONFIG
   local REMOTE_INSTANCE_SSH_PORT
-  local INSTANCE_ROLE=$(echo "$INSTANCE_CONFIG" | jq -r '.server_role')
 
   # Setup SSH access to all other nodes for master nodes
   if [ "$INSTANCE_ROLE" == 'master' ]; then
@@ -152,6 +151,40 @@ configure_remote_ssh() {
   fi
 }
 
+configure_service() {
+  # Start JournalNode
+  echo '[Hadoop] Starting JournalNode...'
+  su - hadoop -c 'hadoop-daemon.sh start journalnode'
+  sleep 5
+  su - hadoop -c 'jps'
+
+  if [ "$INSTANCE_ROLE" == 'master' ]; then
+
+    if [ "$INSTANCE_SERVER_ID" -le 1 ]; then  # primary master
+      echo '[Hadoop] Configuring primary master...'
+
+      su - hadoop -c 'hdfs zkfc -formatZK'
+      su - hadoop -c 'hdfs namenode -format'
+
+      su - hadoop -c 'start-all.sh'
+      su - hadoop -c 'mr-jobhistory-daemon.sh start historyserver'
+    else  # backup masters
+      echo '[Hadoop] Configuring backup masters...'
+
+      su - hadoop -c 'hdfs namenode –bootstrapStandby'
+      su - hadoop -c 'hadoop-daemon.sh start namenode'
+      su - hadoop -c 'yarn-daemon.sh start resourcemanager'
+      su - hadoop -c 'hadoop-daemons.sh start zkfc'
+    fi
+
+    echo '[Hadoop] HDFS service status:'
+    su - hadoop -c "hdfs haadmin -getServiceState nn$INSTANCE_SERVER_ID"
+
+    echo '[Hadoop] Yarn service status:'
+    su - hadoop -c "yarn rmadmin -getServiceState rm$INSTANCE_SERVER_ID"
+  fi
+}
+
 case "$1" in
   install)
     set -e
@@ -162,6 +195,7 @@ case "$1" in
     configure_user
     configure_permission
     configure_remote_ssh
+    configure_service
     set +e
     ;;
   *)

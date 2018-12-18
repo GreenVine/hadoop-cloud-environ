@@ -8,6 +8,8 @@ export HBASE_INSTALL_DIR=/opt/hbase
 export DEPLOY_SPEC_MIN="$TEMP_WORKDIR/deployment-min.json"
 export DNS_SUFFIX=$(jq -r '.config.discovery.dns.dns_suffix' "$DEPLOY_SPEC")
 export INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.server_name=="'"$NODE_HOSTNAME"'"))' "$DEPLOY_SPEC")
+export INSTANCE_ROLE=$(echo "$INSTANCE_CONFIG" | jq -r '.server_role')
+export INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
 
 # Source environment file
 . /etc/environment
@@ -37,7 +39,19 @@ fi
   echo "HADOOP_COMMON_LIB_NATIVE_DIR=\"$HADOOP_INSTALL_DIR/lib/native\""
   echo "HADOOP_OPTS=\"-Djava.library.path=$HADOOP_INSTALL_DIR/lib/native\""
 } >> /etc/environment
-. /etc/environment
+
+{
+  echo "export PATH=\"$PATH_NEW\""
+  echo "export HADOOP_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "export ZOOKEEPER_HOME=\"$ZOOKEEPER_INSTALL_DIR\""
+  echo "export HBASE_HOME=\"$HBASE_INSTALL_DIR\""
+  echo "export HADOOP_MAPRED_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "export HADOOP_COMMON_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "export HADOOP_HDFS_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "export YARN_HOME=\"$HADOOP_INSTALL_DIR\""
+  echo "export HADOOP_COMMON_LIB_NATIVE_DIR=\"$HADOOP_INSTALL_DIR/lib/native\""
+  echo "export HADOOP_OPTS=\"-Djava.library.path=$HADOOP_INSTALL_DIR/lib/native\""
+} >> /etc/profile
 
 # Install Jinja CLI
 pip3 install jinja2-cli

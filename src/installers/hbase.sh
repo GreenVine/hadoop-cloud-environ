@@ -79,8 +79,19 @@ configure_file() {
   jq -r '.config.cluster.nodes[] | select(.server_role == "master" and (.server_id | tonumber) > 1) | .server_name + ".'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HBASE_INSTALL_DIR/conf/backup-masters"
 }
 
+configure_remote_ssh() {
+  mkdir -p /home/hbase/.ssh
+  cp -rf /home/hadoop/.ssh/known_hosts /home/hbase/.ssh/known_hosts
+  chown -R hbase:hbase /home/hbase/.ssh
+}
+
 configure_permission() {
   chown -R hbase:hbase "$HBASE_INSTALL_DIR"
+}
+
+configure_service() {
+  echo '[HBase] Starting HBase...'
+  su - hbase -c 'start-hbase.sh'
 }
 
 case "$1" in
@@ -91,6 +102,8 @@ case "$1" in
     configure_env
     configure_file
     configure_permission
+    configure_remote_ssh
+    configure_service
     set +e
     ;;
   *)
