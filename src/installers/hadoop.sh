@@ -158,6 +158,7 @@ configure_service() {
   sleep 5
   su - hadoop -c 'jps'
 
+  return  # TODO: temp
   if [ "$INSTANCE_ROLE" == 'master' ]; then
 
     if [ "$INSTANCE_SERVER_ID" -le 1 ]; then  # primary master
