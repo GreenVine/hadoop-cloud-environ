@@ -32,14 +32,36 @@ users:
     gecos: HBase Service Account
     primary-group: hbase
 
+## File System ##
+disk_setup:
+  /dev/sdb:
+    table_type: mbr
+    layout: true
+    overwrite: true
+
+fs_setup:
+  - label: data_fs
+    filesystem: ext4
+    device: /dev/sdb
+    partition: sdb1
+    overwrite: true
+
+mounts:
+  - ["/dev/sdb1", "/var"]
+
 ## Swap Space ##
 swap:
   filename: /mnt/swap
   size: 'auto'
-  maxsize: 2147483648 # 2 GB
+  maxsize: 4294967296 # 4 GB
 
 ## Boot Commands ##
 bootcmd:
+  # Disk management
+  - partx --update /dev/sdb
+  - mkfs.ext4 /dev/sdb1
+  - partprobe
+
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
   - apt-mark hold cloud-init
 
