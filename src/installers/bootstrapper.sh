@@ -58,11 +58,17 @@ pip3 install jinja2-cli
 
 set -e
 
+echo 'Preparing libraries and installers...'
+
+# Download library functions
+. <(curl -sf "$ASSET_URL/lib/functions.sh")
+
 # Download minimum deployment specification
 curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
 
-# Configure service discovery
+# Configure services
 curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
+curl -sf "$ASSET_URL/services/user.sh" | bash
 
 # Configure applications
 curl -sf "$ASSET_URL/installers/zookeeper.sh" | bash -s -- install
@@ -73,4 +79,4 @@ set +e
 
 # Final clean-up
 apt-mark unhold cloud-init
-# rm -rf "$TEMP_WORKDIR"
+rm -rf "$TEMP_WORKDIR"

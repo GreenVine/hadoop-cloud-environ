@@ -29,10 +29,9 @@ configure_service() {
     while IFS=$'\n' read -r hostname; do
       # clear DNS cache and sleep if remote host is not ready
       echo "[ZooKeeper] Waiting for cluster node: $hostname..."
+      systemctl restart systemd-resolved.service
 
-      timeout "100" sh -c 'until nc -z $0 $1; do systemctl restart systemd-resolved.service; sleep 10; echo "[ZooKeeper::WARN] Retrying..."; done' "$hostname.$DNS_SUFFIX" "$ZOOKEEPER_QUORUM_PORT"
-
-      if [ $? -eq 0 ]; then
+      if port_wait "$hostname.$DNS_SUFFIX" "$ZOOKEEPER_QUORUM_PORT" 5 20; then
         echo "[ZooKeeper] Cluster node $hostname is up!"
       else
         echo "[ZooKeeper::ERROR] Cluster node $hostname may be down or the remote service is not running."
