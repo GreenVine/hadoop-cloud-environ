@@ -61,7 +61,7 @@ set -e
 echo 'Preparing libraries and installers...'
 
 # Download library functions
-. <(curl -sf "$ASSET_URL/lib/functions.sh")
+. <(curl -sf "$ASSET_URL/libs/functions.sh")
 
 # Download minimum deployment specification
 curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
