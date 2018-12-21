@@ -13,6 +13,10 @@
       "dns": {}
     },
     "configuration": {
+      "zookeeper": {
+        "common": {},
+        "file": {}
+      },
       "hadoop": {
         "common": {},
         "file": {
