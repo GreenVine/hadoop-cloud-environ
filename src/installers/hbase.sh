@@ -80,8 +80,31 @@ configure_file() {
 }
 
 configure_remote_ssh() {
+  local REMOTE_INSTANCE_CONFIG
+  local REMOTE_INSTANCE_SSH_PORT
+
+  # Setup SSH access to all other nodes for master nodes
+  echo '[HBase] SSH Setup: Configuring SSH trusted hosts...'
+
   mkdir -p /home/hbase/.ssh
-  cp -rf /home/hadoop/.ssh/known_hosts /home/hbase/.ssh/known_hosts
+
+  jq -r '.config.cluster.nodes[] | .server_name' "$DEPLOY_SPEC" |
+    while IFS=$'\n' read -r hostname; do
+      REMOTE_INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(.server_name=="'"$hostname"'"))' "$DEPLOY_SPEC")
+      REMOTE_INSTANCE_SSH_PORT=$(echo "$REMOTE_INSTANCE_CONFIG" | jq -r '.ssh_port')
+
+      # clear DNS cache and sleep if remote host is not ready
+      echo "[HBase] SSH Setup: Waiting for cluster node: $hostname..."
+      systemctl restart systemd-resolved.service
+
+      if port_wait "$hostname.$DNS_SUFFIX" "$REMOTE_INSTANCE_SSH_PORT" 5 20; then
+        echo "[HBase] SSH Setup: Setting up access for cluster node $hostname..."
+        ssh-keyscan -p "$REMOTE_INSTANCE_SSH_PORT" "$hostname.$DNS_SUFFIX" >> /home/hbase/.ssh/known_hosts
+      else
+        echo >&2 "[HBase::ERROR] SSH Setup: Cluster node $hostname may be down or the remote SSH service is not running."
+      fi
+    done
+
   chown -R hbase:hbase /home/hbase/.ssh
 }
 
