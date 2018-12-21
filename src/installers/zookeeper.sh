@@ -35,7 +35,11 @@ configure_file() {
   # Move data directory
   if [ "$ZOOKEEPER_DATA_DIR" != "$ZOOKEEPER_DEFAULT_DATA_DIR" ]; then
     sed -i -- "s#dataDir=$ZOOKEEPER_DEFAULT_DATA_DIR#dataDir=$ZOOKEEPER_DATA_DIR#g" $ZOOKEEPER_CONF_FILE  # replace data dir
-    cp -rfp "$ZOOKEEPER_DEFAULT_DATA_DIR/*" "$ZOOKEEPER_DATA_DIR"
+
+    if [ -d "$ZOOKEEPER_DEFAULT_DATA_DIR" ]; then
+      cp -rfp "$ZOOKEEPER_DEFAULT_DATA_DIR/"* "$ZOOKEEPER_DATA_DIR"
+      rm -rf "$ZOOKEEPER_DEFAULT_DATA_DIR"
+    fi
   fi
 }
 
