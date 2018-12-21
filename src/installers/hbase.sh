@@ -117,6 +117,8 @@ configure_service() {
   su - hbase -c 'start-hbase.sh'
 }
 
+. <(curl -sf "$ASSET_URL/libs/functions.sh")
+
 case "$1" in
   install)
     set -e
