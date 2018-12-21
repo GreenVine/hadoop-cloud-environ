@@ -8,6 +8,11 @@ port_wait() {
   local interval=${3:-5}
   local retries=${4:-3}
 
+  if [ -z "$host" ] || [ -z "$port" ]; then
+    echo "Usage: port_wait hostname port [interval=1] [retries=1]" >&2
+    return 1
+  fi
+
   if [ "$interval" -lt 1 ]; then
     interval=1
   fi
@@ -22,6 +27,6 @@ port_wait() {
     return 0
   else
     echo >&2 "Connection to $host:$port is timed out after $timeout seconds!"
-    return 1
+    return 2
   fi
 }
