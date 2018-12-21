@@ -117,8 +117,6 @@ configure_service() {
   su - hbase -c 'start-hbase.sh'
 }
 
-. <(curl -sf "$ASSET_URL/libs/functions.sh")
-
 case "$1" in
   install)
     set -e
@@ -127,7 +125,7 @@ case "$1" in
     configure_env
     configure_file
     configure_permission
-    configure_remote_ssh
+    # configure_remote_ssh
     configure_service
     set +e
     ;;

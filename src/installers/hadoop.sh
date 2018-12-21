@@ -185,8 +185,6 @@ configure_service() {
   fi
 }
 
-. <(curl -sf "$ASSET_URL/libs/functions.sh")
-
 case "$1" in
   install)
     set -e

@@ -30,3 +30,5 @@ port_wait() {
     return 2
   fi
 }
+
+export -f port_wait
