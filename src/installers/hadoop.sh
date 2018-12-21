@@ -136,14 +136,13 @@ configure_remote_ssh() {
 
         # clear DNS cache and sleep if remote host is not ready
         echo "[Hadoop] SSH Setup: Waiting for cluster node: $hostname..."
+        systemctl restart systemd-resolved.service
 
-        timeout "100" sh -c 'until nc -z $0 $1; do systemctl restart systemd-resolved.service; sleep 10; echo "[Hadoop::WARN] Retrying..."; done' "$hostname.$DNS_SUFFIX" "$REMOTE_INSTANCE_SSH_PORT"
-
-        if [ $? -eq 0 ]; then
+        if port_wait "$hostname.$DNS_SUFFIX" "$REMOTE_INSTANCE_SSH_PORT" 5 20; then
           echo "[Hadoop] SSH Setup: Setting up access for cluster node $hostname..."
           ssh-keyscan -p "$REMOTE_INSTANCE_SSH_PORT" "$hostname.$DNS_SUFFIX" >> /home/hadoop/.ssh/known_hosts
         else
-          echo "[Hadoop::ERROR] SSH Setup: Cluster node $hostname may be down or the remote SSH service is not running."
+          echo >&2 "[Hadoop::ERROR] SSH Setup: Cluster node $hostname may be down or the remote SSH service is not running."
         fi
       done
 

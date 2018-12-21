@@ -67,6 +67,8 @@ echo 'Preparing libraries and installers...'
 curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
 
 # Configure services
+systemctl stop zookeeper  # ZooKeeper automatically starts after installation
+
 curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
 curl -sf "$ASSET_URL/services/user.sh" | bash
 
