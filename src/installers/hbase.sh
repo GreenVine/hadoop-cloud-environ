@@ -79,6 +79,31 @@ configure_file() {
   jq -r '.config.cluster.nodes[] | select(.server_role == "master" and (.server_id | tonumber) > 1) | .server_name + ".'"$DNS_SUFFIX"'"' "$DEPLOY_SPEC" > "$HBASE_INSTALL_DIR/conf/backup-masters"
 }
 
+configure_user() {
+  local HBASE_USER_HOME=/home/hbase
+  local IDENTITY_URL=$(jq -r '.config.deployment.locator.identity_base_url' "$DEPLOY_SPEC")
+  local HBASE_PUB_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hbase.public' "$DEPLOY_SPEC")
+  local HBASE_PRIV_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hbase.private' "$DEPLOY_SPEC")
+  local HBASE_ADD_AUTH_KEY=$(jq -r '.config.cluster.identity.ssh.hbase.add_pubkey_as_authorized_key' "$DEPLOY_SPEC")
+
+  echo '[HBase] Configuring HBase user...'
+
+  mkdir -p "$HBASE_USER_HOME/.ssh"
+  chown hbase:hbase "$HBASE_USER_HOME" "$HBASE_USER_HOME/.ssh"
+
+  curl -sf "$HBASE_PUB_KEY" > "$HBASE_USER_HOME/.ssh/id_rsa.pub"
+  curl -sf "$HBASE_PRIV_KEY" > "$HBASE_USER_HOME/.ssh/id_rsa"
+
+  chmod 0600 "$HBASE_USER_HOME/.ssh/id_rsa.pub" "$HBASE_USER_HOME/.ssh/id_rsa"
+  chown hbase:hbase "$HBASE_USER_HOME/.ssh/id_rsa.pub" "$HBASE_USER_HOME/.ssh/id_rsa"
+
+  if [ "$HBASE_ADD_AUTH_KEY" == "true" ]; then
+    cat "$HBASE_USER_HOME/.ssh/id_rsa.pub" >> "$HBASE_USER_HOME/.ssh/authorized_keys"
+    chmod 0600 "$HBASE_USER_HOME/.ssh/authorized_keys"
+    chown hbase:hbase "$HBASE_USER_HOME/.ssh/authorized_keys"
+  fi
+}
+
 configure_remote_ssh() {
   local REMOTE_INSTANCE_CONFIG
   local REMOTE_INSTANCE_SSH_PORT
@@ -124,8 +149,9 @@ case "$1" in
     download_archive
     configure_env
     configure_file
+    configure_user
     configure_permission
-    # configure_remote_ssh
+    configure_remote_ssh
     configure_service
     set +e
     ;;
