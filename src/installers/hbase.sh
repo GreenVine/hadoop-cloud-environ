@@ -139,6 +139,22 @@ configure_permission() {
 
 configure_service() {
   echo '[HBase] Starting HBase...'
+
+  return 0 # TODO: temp
+  
+  jq -r '.config.cluster.nodes[] | select(.server_id | tonumber < '"$INSTANCE_SERVER_ID"') | .server_name' "$DEPLOY_SPEC" |
+    while IFS=$'\n' read -r hostname; do
+      # clear DNS cache and sleep if remote host is not ready
+      echo "[ZooKeeper] Waiting for cluster node: $hostname..."
+      systemctl restart systemd-resolved.service
+
+      if port_wait "$hostname.$DNS_SUFFIX" "$ZOOKEEPER_QUORUM_PORT" 5 20; then
+        echo "[ZooKeeper] Cluster node $hostname is up!"
+      else
+        echo >&2 "[ZooKeeper::ERROR] Cluster node $hostname may be down or the remote service is not running."
+      fi
+    done
+
   su - hbase -c 'start-hbase.sh'
 }
 
