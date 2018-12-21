@@ -21,7 +21,7 @@ port_wait() {
   if timeout "$timeout" sh -c "until nc -z $host $port &> /dev/null; do sleep $interval; done"; then
     return 0
   else
-    >&2 echo "Connection to $host:$port is timed out after $timeout seconds!"
+    echo >&2 "Connection to $host:$port is timed out after $timeout seconds!"
     return 1
   fi
 }
