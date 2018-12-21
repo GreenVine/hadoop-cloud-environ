@@ -43,9 +43,6 @@ swap:
 
 ## Boot Commands ##
 bootcmd:
-  # Disk management
-  - test -z "$(blkid /dev/nvme1n1)" && parted -s /dev/nvme1n1 mklabel gpt mkpart primary ext4 0% 100%
-
   # Temporarily prevent cloud-init from upgrading: https://bugs.launchpad.net/cloud-init/+bug/1798189
   - apt-mark hold cloud-init
 
@@ -54,10 +51,6 @@ bootcmd:
 
 ## Post-boot Commands ##
 runcmd:
-  # Partition management
-  - mkdir -p /data
-  - blkid /dev/nvme1n1p1 && mkfs -t ext4 -L data_disk /dev/nvme1n1p1 && mount /dev/nvme1n1p1 /data
-
   # Environment variables
   - export TEMP_WORKDIR=/opt/cloud-init/tmp
   - export DEPLOY_SPEC="$TEMP_WORKDIR/deployment.json"

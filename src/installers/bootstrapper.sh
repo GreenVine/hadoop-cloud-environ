@@ -58,6 +58,13 @@ pip3 install jinja2-cli
 
 set -e
 
+# Partition additional disk: /dev/nvme1n1
+echo 'Partition and data disk...'
+test -z "$(blkid /dev/nvme1n1)" && parted -s /dev/nvme1n1 mklabel gpt mkpart primary ext4 0% 100%
+mkdir -p /data
+sleep 2  # allow sync
+blkid /dev/nvme1n1p1 && mkfs -t ext4 -L data_disk /dev/nvme1n1p1 && mount /dev/nvme1n1p1 /data
+
 echo 'Preparing libraries and installers...'
 
 # Download libraries
