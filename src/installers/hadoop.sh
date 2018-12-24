@@ -172,7 +172,7 @@ configure_service() {
     else  # backup masters
       echo '[Hadoop] Configuring backup masters...'
 
-      su - hadoop -c 'hdfs namenode –bootstrapStandby'
+      su - hadoop -c 'hdfs namenode -bootstrapStandby'
       su - hadoop -c 'hadoop-daemon.sh start namenode'
       su - hadoop -c 'yarn-daemon.sh start resourcemanager'
       su - hadoop -c 'hadoop-daemons.sh start zkfc'
