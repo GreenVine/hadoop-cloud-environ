@@ -37,6 +37,7 @@ curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
 
 # Configure system services
 echo 'Configuring system services...'
+hostnamectl set-hostname "$NODE_HOSTNAME.$DNS_SUFFIX"
 curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
 curl -sf "$ASSET_URL/services/hduser.sh" | bash
 
