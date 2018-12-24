@@ -20,19 +20,15 @@ packages:
 
 ## Service Users ##
 groups:
-  - hadoop
+  - hduser
   - hbase
 
 users:
   - default
-  - name: hadoop
+  - name: hduser
     gecos: Hadoop Service Account
-    primary-group: hadoop
+    primary-group: hduser
     groups: [zookeeper]
-  - name: hbase
-    gecos: HBase Service Account
-    primary-group: hbase
-    groups: [zookeeper, hadoop]
 
 ## File System ##
 mounts:

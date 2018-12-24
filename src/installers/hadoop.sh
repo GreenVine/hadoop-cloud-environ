@@ -57,7 +57,7 @@ configure_env() {
   fi
 
   mkdir -p "$HADOOP_DIR/hdfs/"{tmp,journal,name,data,history_tmp,history,logs}
-  chown -R hadoop:hadoop "$HADOOP_DIR"
+  chown -R hduser:hduser "$HADOOP_DIR"
   chmod 0775 -R "$HADOOP_DIR"
 }
 
@@ -92,32 +92,32 @@ configure_file() {
 }
 
 configure_user() {
-  local HADOOP_USER_HOME=/home/hadoop
+  local HADOOP_USER_HOME=/home/hduser
   local IDENTITY_URL=$(jq -r '.config.deployment.locator.identity_base_url' "$DEPLOY_SPEC")
-  local HADOOP_PUB_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hadoop.public' "$DEPLOY_SPEC")
-  local HADOOP_PRIV_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hadoop.private' "$DEPLOY_SPEC")
-  local HADOOP_ADD_AUTH_KEY=$(jq -r '.config.cluster.identity.ssh.hadoop.add_pubkey_as_authorized_key' "$DEPLOY_SPEC")
+  local HADOOP_PUB_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hduser.public' "$DEPLOY_SPEC")
+  local HADOOP_PRIV_KEY=$IDENTITY_URL/$(jq -r '.config.cluster.identity.ssh.hduser.private' "$DEPLOY_SPEC")
+  local HADOOP_ADD_AUTH_KEY=$(jq -r '.config.cluster.identity.ssh.hduser.add_pubkey_as_authorized_key' "$DEPLOY_SPEC")
 
-  echo '[Hadoop] Configuring Hadoop user...'
+  echo '[Hadoop] Configuring User hduser...'
 
   mkdir -p "$HADOOP_USER_HOME/.ssh"
-  chown hadoop:hadoop "$HADOOP_USER_HOME" "$HADOOP_USER_HOME/.ssh"
+  chown hduser:hduser "$HADOOP_USER_HOME" "$HADOOP_USER_HOME/.ssh"
 
   curl -sf "$HADOOP_PUB_KEY" > "$HADOOP_USER_HOME/.ssh/id_rsa.pub"
   curl -sf "$HADOOP_PRIV_KEY" > "$HADOOP_USER_HOME/.ssh/id_rsa"
 
   chmod 0600 "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
-  chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
+  chown hduser:hduser "$HADOOP_USER_HOME/.ssh/id_rsa.pub" "$HADOOP_USER_HOME/.ssh/id_rsa"
 
   if [ "$HADOOP_ADD_AUTH_KEY" == "true" ]; then
     cat "$HADOOP_USER_HOME/.ssh/id_rsa.pub" >> "$HADOOP_USER_HOME/.ssh/authorized_keys"
     chmod 0600 "$HADOOP_USER_HOME/.ssh/authorized_keys"
-    chown hadoop:hadoop "$HADOOP_USER_HOME/.ssh/authorized_keys"
+    chown hduser:hduser "$HADOOP_USER_HOME/.ssh/authorized_keys"
   fi
 }
 
 configure_permission() {
-  chown -R hadoop:hadoop "$HADOOP_INSTALL_DIR"
+  chown -R hduser:hduser "$HADOOP_INSTALL_DIR"
 }
 
 configure_remote_ssh() {
@@ -128,7 +128,7 @@ configure_remote_ssh() {
   if [ "$INSTANCE_ROLE" == 'master' ]; then
     echo '[Hadoop] SSH Setup: Configuring SSH trusted hosts...'
 
-    mkdir -p /home/hadoop/.ssh
+    mkdir -p /home/hduser/.ssh
 
     jq -r '.config.cluster.nodes[] | .server_name' "$DEPLOY_SPEC" |
       while IFS=$'\n' read -r hostname; do
@@ -141,13 +141,13 @@ configure_remote_ssh() {
 
         if port_wait "$hostname.$DNS_SUFFIX" "$REMOTE_INSTANCE_SSH_PORT" 5 20; then
           echo "[Hadoop] SSH Setup: Setting up access for cluster node $hostname..."
-          ssh-keyscan -p "$REMOTE_INSTANCE_SSH_PORT" "$hostname.$DNS_SUFFIX" >> /home/hadoop/.ssh/known_hosts
+          ssh-keyscan -p "$REMOTE_INSTANCE_SSH_PORT" "$hostname.$DNS_SUFFIX" >> /home/hduser/.ssh/known_hosts
         else
           echo >&2 "[Hadoop::ERROR] SSH Setup: Cluster node $hostname may be down or the remote SSH service is not running."
         fi
       done
 
-    chown -R hadoop:hadoop /home/hadoop/.ssh
+    chown -R hduser:hduser /home/hduser/.ssh
   fi
 }
 
@@ -156,7 +156,7 @@ configure_service() {
 
   # Start JournalNode
   echo '[Hadoop] Starting JournalNode...'
-  su - hadoop -c 'hadoop-daemon.sh start journalnode'
+  su - hduser -c 'hadoop-daemon.sh start journalnode'
   sleep 5
 
   if [ "$INSTANCE_ROLE" == 'master' ]; then
@@ -172,27 +172,27 @@ configure_service() {
     if [ "$INSTANCE_SERVER_ID" -le 1 ]; then  # primary master
       echo '[Hadoop] Configuring primary master...'
 
-      su - hadoop -c 'hdfs zkfc -formatZK'
-      su - hadoop -c 'hdfs namenode -format'
+      su - hduser -c 'hdfs zkfc -formatZK'
+      su - hduser -c 'hdfs namenode -format'
 
-      su - hadoop -c 'start-all.sh'
-      su - hadoop -c 'mr-jobhistory-daemon.sh start historyserver'
+      su - hduser -c 'start-all.sh'
+      su - hduser -c 'mr-jobhistory-daemon.sh start historyserver'
     else  # backup masters
       echo '[Hadoop] Configuring backup masters...'
 
-      su - hadoop -c 'hdfs namenode -bootstrapStandby'
-      su - hadoop -c 'hadoop-daemon.sh start namenode'
-      su - hadoop -c 'yarn-daemon.sh start resourcemanager'
+      su - hduser -c 'hdfs namenode -bootstrapStandby'
+      su - hduser -c 'hadoop-daemon.sh start namenode'
+      su - hduser -c 'yarn-daemon.sh start resourcemanager'
     fi
 
     echo '[Hadoop] HDFS service status:'
-    su - hadoop -c "hdfs haadmin -getServiceState nn$INSTANCE_SERVER_ID"
+    su - hduser -c "hdfs haadmin -getServiceState nn$INSTANCE_SERVER_ID"
 
     echo '[Hadoop] Yarn service status:'
-    su - hadoop -c "yarn rmadmin -getServiceState rm$INSTANCE_SERVER_ID"
+    su - hduser -c "yarn rmadmin -getServiceState rm$INSTANCE_SERVER_ID"
   fi
 
-  su - hadoop -c 'jps'
+  su - hduser -c 'jps'
 }
 
 case "$1" in
