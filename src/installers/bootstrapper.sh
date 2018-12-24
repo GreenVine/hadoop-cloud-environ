@@ -13,6 +13,9 @@ export INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
 
 export ZOOKEEPER_QUORUM_PORT=$(echo "$INSTANCE_CONFIG" | jq -r '.zookeeper_quorum_port')
 
+# Update initialisation status
+aws ec2 create-tags --region "$REGION" --resources "$INSTANCE_ID" --tags Key=NODE_INITIALISATION,Value=STARTED
+
 # Source environment file
 . /etc/environment
 
@@ -60,6 +63,8 @@ pip3 install jinja2-cli
 
 set -e
 
+aws ec2 create-tags --region "$REGION" --resources "$INSTANCE_ID" --tags Key=NODE_INITIALISATION,Value=CONFIGURING
+
 # Partition additional disk: /dev/nvme1n1
 echo 'Partition and data disk...'
 test -z "$(blkid /dev/nvme1n1)" && parted -s /dev/nvme1n1 mklabel gpt mkpart primary ext4 0% 100%
@@ -91,6 +96,8 @@ curl -sf "$ASSET_URL/installers/hadoop.sh" | bash -s -- install
 curl -sf "$ASSET_URL/installers/hbase.sh" | bash -s -- install
 
 set +e
+
+aws ec2 create-tags --region "$REGION" --resources "$INSTANCE_ID" --tags Key=NODE_INITIALISATION,Value=COMPLETED
 
 # Final clean-up
 apt-mark unhold cloud-init

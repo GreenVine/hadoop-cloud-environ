@@ -21,7 +21,6 @@ packages:
 ## Service Users ##
 groups:
   - hduser
-  - hbase
 
 users:
   - default
@@ -51,7 +50,7 @@ bootcmd:
 runcmd:
   # Environment variables
   - export TEMP_WORKDIR=/opt/cloud-init/tmp
-  - export DEPLOY_SPEC="$TEMP_WORKDIR/deployment.json"
+  - export DEPLOY_SPEC=/opt/cloud-init/deployment.json
 
   # Create temp work dir
   - mkdir -p "$TEMP_WORKDIR"
@@ -63,6 +62,9 @@ runcmd:
   # Export configured instance tags as environment variable
   - aws ec2 describe-tags --region "$REGION" --filter "Name=resource-id,Values=$INSTANCE_ID" --query "Tags[]" | jq -r '.[] | select(.Key | contains("-") | not) | .Key |= ascii_upcase | "export " + .Key + "=" + .Value' > "$TEMP_WORKDIR/ec2_tags"
   - . $TEMP_WORKDIR/ec2_tags
+
+  # Tagging node initialisation status
+  - aws ec2 create-tags --region "$REGION" --resources "$INSTANCE_ID" --tags Key=NODE_INITIALISATION,Value=PENDING
 
   # Deployment spec
   - curl -s "$DEPLOY_SPEC_URL" > "$DEPLOY_SPEC"
