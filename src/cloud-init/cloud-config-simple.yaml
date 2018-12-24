@@ -64,3 +64,11 @@ runcmd:
 
 ## Final Message ##
 final_message: 'OK: System initialisation is completed after $UPTIME seconds'
+
+## Reboot after Completion ##
+power_state:
+  delay: "+1"
+  mode: reboot
+  message: Reboot to apply updates
+  timeout: 30
+  condition: True
