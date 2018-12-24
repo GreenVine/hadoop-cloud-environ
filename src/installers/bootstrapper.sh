@@ -65,8 +65,12 @@ mkdir -p /data
 sleep 2  # allow sync
 blkid /dev/nvme1n1p1 && mkfs -t ext4 -L data_disk /dev/nvme1n1p1 && mount /dev/nvme1n1p1 /data
 
-echo 'Preparing libraries and installers...'
+# System hostname
+echo 'Setting up system hostname...'
+hostnamectl set-hostname "$NODE_HOSTNAME.$DNS_SUFFIX"
+hostnamectl
 
+echo 'Preparing libraries and installers...'
 # Download libraries
 source <(curl -sf "$ASSET_URL/libs/functions.sh")
 
