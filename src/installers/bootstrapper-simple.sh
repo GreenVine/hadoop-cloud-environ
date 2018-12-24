@@ -26,7 +26,7 @@ export INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
   echo 'export HADOOP_HDFS_HOME=$HADOOP_HOME'
   echo 'export YARN_HOME=$HADOOP_HOME'
   echo 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native'
-  echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native'
+  echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"'
 } >> /home/hduser/.bashrc
 
 set -e
