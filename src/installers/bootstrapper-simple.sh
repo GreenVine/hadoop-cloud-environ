@@ -40,10 +40,14 @@ echo 'Configuring system services...'
 curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
 curl -sf "$ASSET_URL/services/hduser.sh" | bash
 
-# Configure file services
-echo 'Configuring file services...'
+# Configure Hadoop services
+echo 'Configuring Hadoop services...'
 curl -sf "$TARBALL_URL/hduser-home.txz" -o "$TEMP_WORKDIR/hduser-home.txz"
 tar xJfv "$TEMP_WORKDIR/hduser-home.txz" -C /home/hduser
+
+# Configure ZooKeeper services
+echo 'Configuring ZooKeeper services...'
+echo "$INSTANCE_SERVER_ID" > /home/hduser/zookeeper-3.4.6/zkd/myid
 chown -R hduser:hduser /home/hduser
 
 set +e
