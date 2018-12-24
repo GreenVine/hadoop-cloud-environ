@@ -38,7 +38,7 @@ curl -sf "$ASSET_URL/templates/cluster-spec-min.json" -o "$DEPLOY_SPEC_MIN"
 # Configure system services
 echo 'Configuring system services...'
 curl -sf "$ASSET_URL/services/service-discovery.sh" | bash -s -- up
-curl -sf "$ASSET_URL/services/user.sh" | bash
+curl -sf "$ASSET_URL/services/hduser.sh" | bash
 
 # Configure file services
 echo 'Configuring file services...'
