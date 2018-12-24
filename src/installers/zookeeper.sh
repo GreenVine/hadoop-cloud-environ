@@ -19,8 +19,6 @@ configure_file() {
   fi
 
   mkdir -p $ZOOKEEPER_DATA_DIR
-  chown -R zookeeper:zookeeper $ZOOKEEPER_DATA_DIR
-
   # Output node ID
   if [ "$ZOOKEEPER_MYID" -ge 1 ] && [ "$ZOOKEEPER_MYID" -le 255 ]; then
     echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_CONF_DIR/conf/myid
@@ -43,6 +41,7 @@ configure_file() {
   fi
 
   chown -R zookeeper:zookeeper "$ZOOKEEPER_DATA_DIR" "$ZOOKEEPER_CONF_DIR"
+  chmod 0775 "$ZOOKEEPER_DATA_DIR"  # HBase needs access to this data dir
 }
 
 configure_service() {
@@ -50,7 +49,7 @@ configure_service() {
   systemctl enable zookeeper
 
   return 0 # tmp
-  
+
   echo '[ZooKeeper] Sleeping to wait for other cluster nodes...'
   systemctl stop zookeeper
   sleep $(( INSTANCE_SERVER_ID * 10 ))  # compulsory sleep
