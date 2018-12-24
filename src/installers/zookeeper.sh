@@ -49,6 +49,8 @@ configure_service() {
   # Start ZooKeeper automatically on boot
   systemctl enable zookeeper
 
+  return 0 # tmp
+  
   echo '[ZooKeeper] Sleeping to wait for other cluster nodes...'
   systemctl stop zookeeper
   sleep $(( INSTANCE_SERVER_ID * 10 ))  # compulsory sleep

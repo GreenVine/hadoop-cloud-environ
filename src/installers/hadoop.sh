@@ -151,6 +151,8 @@ configure_remote_ssh() {
 }
 
 configure_service() {
+  return 0 # tmp
+  
   # Start JournalNode
   echo '[Hadoop] Starting JournalNode...'
   su - hadoop -c 'hadoop-daemon.sh start journalnode'
