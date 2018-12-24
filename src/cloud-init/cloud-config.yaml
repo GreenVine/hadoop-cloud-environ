@@ -28,10 +28,11 @@ users:
   - name: hadoop
     gecos: Hadoop Service Account
     primary-group: hadoop
+    groups: [zookeeper]
   - name: hbase
     gecos: HBase Service Account
     primary-group: hbase
-    groups: [zookeeper]
+    groups: [zookeeper, hadoop]
 
 ## File System ##
 mounts:

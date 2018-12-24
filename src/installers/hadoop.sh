@@ -58,6 +58,7 @@ configure_env() {
 
   mkdir -p "$HADOOP_DIR/hdfs/"{tmp,journal,name,data,history_tmp,history,logs}
   chown -R hadoop:hadoop "$HADOOP_DIR"
+  chmod 0775 -R "$HADOOP_DIR"
 }
 
 configure_file() {
@@ -152,7 +153,7 @@ configure_remote_ssh() {
 
 configure_service() {
   return 0 # tmp
-  
+
   # Start JournalNode
   echo '[Hadoop] Starting JournalNode...'
   su - hadoop -c 'hadoop-daemon.sh start journalnode'
