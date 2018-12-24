@@ -1,0 +1,16 @@
+[Unit]
+Description=Hadoop JournalNode Service
+After=network.target
+
+[Service]
+User=hduser
+Group=hduser
+Type=forking
+EnvironmentFile=/etc/environment
+Restart=always
+RestartSec=5
+ExecStart=/opt/hadoop/sbin/hadoop-daemon.sh start journalnode
+ExecStop=/opt/hadoop/sbin/hadoop-daemon.sh stop journalnode
+
+[Install]
+WantedBy=default.target

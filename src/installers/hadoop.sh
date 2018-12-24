@@ -195,6 +195,13 @@ configure_service() {
   su - hduser -c 'jps'
 }
 
+configure_systemd() {
+  curl -sf "$ASSET_URL/systemd/hadoop-journalnode.service" -o /etc/systemd/system/hadoop-journalnode.service
+
+  systemctl daemon-reload
+  systemctl enable hadoop-journalnode.service
+}
+
 case "$1" in
   install)
     set -e
@@ -206,6 +213,7 @@ case "$1" in
     configure_permission
     configure_remote_ssh
     configure_service
+    configure_systemd
     set +e
     ;;
   *)
