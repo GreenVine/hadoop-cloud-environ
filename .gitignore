@@ -28,3 +28,7 @@ Temporary Items
 
 # VSCode
 .vscode
+
+# Project specific
+config/*
+!config/*.sample.json
