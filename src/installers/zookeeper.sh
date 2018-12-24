@@ -24,7 +24,7 @@ configure_file() {
   # Output node ID
   if [ "$ZOOKEEPER_MYID" -ge 1 ] && [ "$ZOOKEEPER_MYID" -le 255 ]; then
     echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_CONF_DIR/conf/myid
-    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/conf/myid
+    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
 
     chown zookeeper:zookeeper $ZOOKEEPER_CONF_DIR/conf/myid $ZOOKEEPER_DATA_DIR/myid
   else
