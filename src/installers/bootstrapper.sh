@@ -11,6 +11,8 @@ export INSTANCE_CONFIG=$(jq -rc '.config.cluster | .common * (.nodes[] | select(
 export INSTANCE_ROLE=$(echo "$INSTANCE_CONFIG" | jq -r '.server_role')
 export INSTANCE_SERVER_ID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
 
+export ZOOKEEPER_QUORUM_PORT=$(echo "$INSTANCE_CONFIG" | jq -r '.zookeeper_quorum_port')
+
 # Source environment file
 . /etc/environment
 

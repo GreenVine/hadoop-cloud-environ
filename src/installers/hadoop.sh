@@ -155,11 +155,16 @@ configure_service() {
   echo '[Hadoop] Starting JournalNode...'
   su - hadoop -c 'hadoop-daemon.sh start journalnode'
   sleep 5
-  su - hadoop -c 'jps'
-
-  return 0 # TODO: temp
 
   if [ "$INSTANCE_ROLE" == 'master' ]; then
+
+    jq -r '.config.cluster.nodes[] | .server_name' "$DEPLOY_SPEC" |
+      while IFS=$'\n' read -r hostname; do
+        if ! port_wait "$hostname.$DNS_SUFFIX" "$ZOOKEEPER_QUORUM_PORT" 5 20; then
+          echo >&2 "[Hadoop:ERROR] Master Setup: Failed to wait for ZooKeeper service on $hostname!"
+          return 1
+        fi
+      done
 
     if [ "$INSTANCE_SERVER_ID" -le 1 ]; then  # primary master
       echo '[Hadoop] Configuring primary master...'
@@ -183,6 +188,8 @@ configure_service() {
     echo '[Hadoop] Yarn service status:'
     su - hadoop -c "yarn rmadmin -getServiceState rm$INSTANCE_SERVER_ID"
   fi
+
+  su - hadoop -c 'jps'
 }
 
 case "$1" in

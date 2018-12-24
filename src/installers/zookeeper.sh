@@ -1,11 +1,11 @@
 #!/bin/bash
 
-ZOOKEEPER_CONF_DIR=/etc/zookeeper/conf
+ZOOKEEPER_CONF_DIR=/etc/zookeeper
 ZOOKEEPER_CTRL_DIR=/usr/share/zookeeper/bin
 ZOOKEEPER_MYID=$(echo "$INSTANCE_CONFIG" | jq -r '.server_id')
 
 configure_file() {
-  local ZOOKEEPER_CONF_FILE="$ZOOKEEPER_CONF_DIR/zoo.cfg"
+  local ZOOKEEPER_CONF_FILE="$ZOOKEEPER_CONF_DIR/conf/zoo.cfg"
   local ZOOKEEPER_DATA_DIR=$(jq -r '.config.configuration.zookeeper.common.zookeeper_dir' "$DEPLOY_SPEC")
   local ZOOKEEPER_DEFAULT_DATA_DIR=/var/lib/zookeeper
 
@@ -23,10 +23,10 @@ configure_file() {
 
   # Output node ID
   if [ "$ZOOKEEPER_MYID" -ge 1 ] && [ "$ZOOKEEPER_MYID" -le 255 ]; then
-    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_CONF_DIR/myid
-    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/myid
+    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_CONF_DIR/conf/myid
+    echo "$ZOOKEEPER_MYID" > $ZOOKEEPER_DATA_DIR/conf/myid
 
-    chown zookeeper:zookeeper $ZOOKEEPER_CONF_DIR/myid $ZOOKEEPER_DATA_DIR/myid
+    chown zookeeper:zookeeper $ZOOKEEPER_CONF_DIR/conf/myid $ZOOKEEPER_DATA_DIR/myid
   else
     echo >&2 "[ZooKeeper::ERROR] Invalid ZooKeeper node ID: $ZOOKEEPER_MYID"
     return 1
@@ -41,11 +41,11 @@ configure_file() {
       rm -rf "$ZOOKEEPER_DEFAULT_DATA_DIR"
     fi
   fi
+
+  chown -R zookeeper:zookeeper "$ZOOKEEPER_DATA_DIR" "$ZOOKEEPER_CONF_DIR"
 }
 
 configure_service() {
-  local ZOOKEEPER_QUORUM_PORT=$(echo "$INSTANCE_CONFIG" | jq -r '.zookeeper_quorum_port')
-
   # Start ZooKeeper automatically on boot
   systemctl enable zookeeper
 
