@@ -1,0 +1,245 @@
+{
+  "version": "20181212",
+  "build": "1.0",
+  "config": {
+    "deployment": {
+      "locator": {
+        "asset_base_url": "https://storage.example.com/assets",
+        "identity_base_url": "https://storage.example.com/identity",
+        "tarball_base_url": "https://storage.example.com/tarball"
+      }
+    },
+    "version": {
+      "zookeeper": "3.4.8",
+      "hadoop": "2.7.7",
+      "hbase": "1.4.9"
+    },
+    "cluster": {
+      "common": {
+        "ssh_port": 22,
+        "zookeeper_comm_port": 2888,
+        "zookeeper_election_port": 3888,
+        "zookeeper_quorum_port": 2181,
+        "hadoop_namenode_rpc_port": 9000,
+        "hadoop_namenode_http_port": 50070,
+        "hadoop_journalnode_rpc_port": 8485,
+        "mapred_jobhistory_port": 10020,
+        "mapred_jobhistory_webui_port": 19888,
+        "yarn_resourcemanager_rpc_port": 8088,
+        "hbase_port": 9000,
+        "hbase_master_port": 60000
+      },
+      "nodes": [
+        {
+          "server_id": "1",
+          "server_name": "master1",
+          "server_role": "master"
+        },
+        {
+          "server_id": "2",
+          "server_name": "master2",
+          "server_role": "master"
+        },
+        {
+          "server_id": "3",
+          "server_name": "slave1",
+          "server_role": "slave"
+        },
+        {
+          "server_id": "4",
+          "server_name": "slave2",
+          "server_role": "slave"
+        },
+        {
+          "server_id": "5",
+          "server_name": "slave3",
+          "server_role": "slave"
+        }
+      ],
+      "identity": {
+        "ssh": {
+          "hduser": {
+            "public": "my-public-key.pub",
+            "private": "my-private-key.pem",
+            "add_pubkey_as_authorized_key": true
+          },
+          "ubuntu": {
+            "authorized_keys": [
+              "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmayfHMbkvu0+4f18rs41h6c8Zivb0gJjktJ207V6tit+c+P92wixOjaPEMBk4ETCkB7fEjk3cdJ79KormeSQcoZ29qaiSveOl45evAFb8/+AqcfrUcWeAc7aAjuh5rgPVoJtc7LxzzB7YfXi+ncjK/xE56XCMptqUPWykvd29kUkSmkCl86L5MLTAjEsXwmXvY/ExNSPcIDe85YnHYwB+G3NHsSmd+Iwvw2EUUvz6HcNBxCclM/E48BTqrktt8tySjp8oq7PRADcZYXvl/55wuCHE7HN4XUQa8eoVzirycaxTEdwWDTd4ES2mRN4QPA5iNctOs9tPR2eAx/FOEJTD ubuntu@example.com"
+            ]
+          }
+        }
+      }
+    },
+    "discovery": {
+      "dns": {
+        "route53_zone_id": "EXAMPLEZONEID",
+        "dns_suffix": "ec2.mycompany.internal"
+      }
+    },
+    "configuration": {
+      "zookeeper": {
+        "common": {
+          "zookeeper_dir": "/data/apps/zookeeper"
+        }
+      },
+      "hadoop": {
+        "common": {
+          "cluster_name": "hadoop-cluster",
+          "hadoop_dir": "/data/apps/hadoop",
+          "hadoop_hdfs_dir": "/data/apps/hadoop/hdfs"
+        },
+        "file": {
+          "core_site": {
+            "static": [
+              {
+                "name": "io.file.buffer.size",
+                "value": "131072",
+                "description": "I/O buffer size"
+              },
+              {
+                "name": "ha.zookeeper.session-timeout.ms",
+                "value": "300000",
+                "description": "Session timeout"
+              }
+            ]
+          },
+          "hdfs_site": {
+            "static": [
+              {
+                "name": "dfs.ha.fencing.methods",
+                "value": "sshfence",
+                "description": "Fencing methods for listening remote services"
+              },
+              {
+                "name": "dfs.ha.fencing.ssh.private-key-files",
+                "value": "/home/hduser/.ssh/id_rsa",
+                "description": "Passwordless SSH for fencing methods"
+              },
+              {
+                "name": "dfs.ha.automatic-failover.enabled",
+                "value": "true"
+              },
+              {
+                "name": "dfs.replication",
+                "value": 3,
+                "description": "Replication copies"
+              },
+              {
+                "name": "dfs.webhdfs.enabled",
+                "value": "true",
+                "description": "Enable web access to HDFS"
+              },
+              {
+                "name": "dfs.namenode.handler.count",
+                "value": 600,
+                "description": "The number of server threads for the namenode"
+              },
+              {
+                "name": "dfs.datanode.handler.count",
+                "value": 600,
+                "description": "The number of server threads for the datanode"
+              },
+              {
+                "name": "dfs.client.socket-timeout",
+                "value": 600000,
+                "description": "Client socket timeout"
+              },
+              {
+                "name": "dfs.datanode.max.transfer.threads",
+                "value": "409600",
+                "description": "Maximum number of files can be opened"
+              }
+            ]
+          },
+          "mapred_site": {
+            "static": [
+              {
+                "name": "mapreduce.framework.name",
+                "value": "yarn"
+              }
+            ]
+          },
+          "yarn_site": {
+            "static": [
+              {
+                "name": "yarn.log-aggregation-enable",
+                "value": "true",
+                "description": "Enable log aggregation and upload to HDFS"
+              },
+              {
+                "name": "yarn.log-aggregation.retain-seconds",
+                "value": 259200,
+                "description": "Seconds to retain aggregated logs"
+              },
+              {
+                "name": "yarn.resourcemanager.connect.retry-interval.ms",
+                "value": 2000,
+                "description": "Retry interval if ResourceManager is disconnected"
+              },
+              {
+                "name": "yarn.resourcemanager.cluster-id",
+                "value": "besttonecluster-yarn"
+              },
+              {
+                "name": "yarn.resourcemanager.ha.enabled",
+                "value": "true",
+                "description": "Enable ResourceManager HA"
+              },
+              {
+                "name": "yarn.resourcemanager.ha.automatic-failover.enabled",
+                "value": "true"
+              },
+              {
+                "name": "yarn.resourcemanager.ha.automatic-failover.embedded",
+                "value": "true"
+              },
+              {
+                "name": "yarn.resourcemanager.ha.automatic-failover.zk-base-path",
+                "value": "/yarn-leader-election"
+              },
+              {
+                "name": "yarn.resourcemanager.recovery.enabled",
+                "value": "true",
+                "description": "Enable automatic recovery"
+              },
+              {
+                "name": "yarn.resourcemanager.store.class",
+                "value": "org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore"
+              },
+              {
+                "name": "yarn.nodemanager.aux-services",
+                "value": "mapreduce_shuffle"
+              },
+              {
+                "name": "yarn.nodemanager.aux-services.mapreduce.shuffle.class",
+                "value": "org.apache.hadoop.mapred.ShuffleHandler"
+              }
+            ]
+          }
+        }
+      },
+      "hbase": {
+        "common": {
+          "hbase_dir": "/data/apps/hbase"
+        },
+        "file": {
+          "hbase_site": {
+            "static": [
+              {
+                "name": "hbase.cluster.distributed",
+                "value": "true",
+                "description": "Enable distributed mode"
+              },
+              {
+                "name": "hbase.zookeeper.property.dataDir",
+                "value": "/data/apps/zookeeper",
+                "description": "ZooKeeper data directory"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
