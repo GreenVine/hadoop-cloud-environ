@@ -4,21 +4,49 @@
     "deployment": {
       "locator": {}
     },
-    "version": {},
+    "version": {
+      "zookeeper": "3.4.8",
+      "hadoop": "2.7.7",
+      "hbase": "1.4.9"
+    },
     "cluster": {
-      "common": {},
+      "common": {
+        "ssh_port": 22,
+        "zookeeper_comm_port": 2888,
+        "zookeeper_election_port": 3888,
+        "zookeeper_quorum_port": 2181,
+        "hadoop_namenode_rpc_port": 9000,
+        "hadoop_namenode_http_port": 50070,
+        "hadoop_journalnode_rpc_port": 8485,
+        "mapred_jobhistory_port": 10020,
+        "mapred_jobhistory_webui_port": 19888,
+        "yarn_resourcemanager_rpc_port": 8088,
+        "hbase_port": 9000,
+        "hbase_master_port": 60000
+      },
       "nodes": []
     },
+    "identity": {
+      "ssh": {}
+    },
     "discovery": {
-      "dns": {}
+      "dns": {
+        "dns_suffix": "ec2.mycompany.internal"
+      }
     },
     "configuration": {
       "zookeeper": {
-        "common": {},
+        "common": {
+          "zookeeper_dir": "/data/apps/zookeeper"
+        },
         "file": {}
       },
       "hadoop": {
-        "common": {},
+        "common": {
+          "cluster_name": "hadoop-cluster",
+          "hadoop_dir": "/data/apps/hadoop",
+          "hadoop_hdfs_dir": "/data/apps/hadoop/hdfs"
+        },
         "file": {
           "core_site": {
             "variable": {},
@@ -39,7 +67,9 @@
         }
       },
       "hbase": {
-        "common": {},
+        "common": {
+          "hbase_dir": "/data/apps/hbase"
+        },
         "file": {
           "hbase_site": {
             "variable": {},
